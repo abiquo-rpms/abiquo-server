@@ -1,8 +1,8 @@
 %define abiquo_basedir /opt/abiquo
 
 Name:           abiquo-server
-Version:        1.7
-Release:        27%{?dist}%{?buildstamp}
+Version:        1.7.5
+Release:        1%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
@@ -13,6 +13,7 @@ Source2:        abiquo-accounting.cron
 Source3:        kinton-schema.sql
 Source4:	kinton-delta-1_6_8-to-1_7_0.sql
 Source5:	kinton-premium-delta-1.6.8-to-1.7.0.sql
+Source6:	kinton-delta-1_7_0-to-1_7_5.sql
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server abiquo-server-tools
 Requires:       /usr/sbin/sendmail /usr/bin/which
@@ -38,6 +39,7 @@ mkdir -p %{buildroot}/%{_sysconfdir}/cron.d/
 cp %{SOURCE3} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp %{SOURCE4} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp %{SOURCE5} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
+cp %{SOURCE6} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp -r %{SOURCE1} $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 /usr/bin/unzip -d $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/webapps/server/ %{SOURCE0}
 cp %{SOURCE2} %{buildroot}/%{_sysconfdir}/cron.d/abiquo-accounting
@@ -52,6 +54,10 @@ rm -rf $RPM_BUILD_ROOT
 %{abiquo_basedir}/config/examples/abiquo.properties.server
 
 %changelog
+* Thu Mar 17 2011 Sergio Rubio <srubio@abiquo.com> - 1.7.5-1
+- added 1.7.0 to 1.7.5 delta 
+- bumped version to 1.7.5
+
 * Wed Feb 16 2011 Sergio Rubio <srubio@abiquo.com> - 1.7-27
 - fix release string
 
