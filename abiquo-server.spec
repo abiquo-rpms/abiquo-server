@@ -2,7 +2,7 @@
 
 Name:           abiquo-server
 Version:        1.7.5
-Release:        1%{?dist}%{?buildstamp}
+Release:        2%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
@@ -54,6 +54,10 @@ rm -rf $RPM_BUILD_ROOT
 %{abiquo_basedir}/config/examples/abiquo.properties.server
 
 %changelog
+* Wed Mar 23 2011 Sergio Rubio <rubiojr@frameos.org> - 1.7.5-2
+- bumped release
+- 1.7.5 db delta fixed
+
 * Thu Mar 17 2011 Sergio Rubio <srubio@abiquo.com> - 1.7.5-1
 - added 1.7.0 to 1.7.5 delta 
 - bumped version to 1.7.5
