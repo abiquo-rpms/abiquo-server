@@ -2,7 +2,7 @@
 
 Name:           abiquo-server
 Version:        1.7.5
-Release:        2%{?dist}%{?buildstamp}
+Release:        3%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
@@ -15,7 +15,7 @@ Source4:	kinton-delta-1_6_8-to-1_7_0.sql
 Source5:	kinton-premium-delta-1.6.8-to-1.7.0.sql
 Source6:	kinton-delta-1_7_0-to-1_7_5.sql
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server abiquo-server-tools
+Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server 
 Requires:       /usr/sbin/sendmail /usr/bin/which
 BuildRequires: /usr/bin/unzip
 BuildArch: 	noarch
@@ -54,6 +54,10 @@ rm -rf $RPM_BUILD_ROOT
 %{abiquo_basedir}/config/examples/abiquo.properties.server
 
 %changelog
+* Mon Mar 28 2011 Sergio Rubio <srubio@abiquo.com> - 1.7.5-3
+- bumped release
+- removed abiquo-server-tools dep
+
 * Wed Mar 23 2011 Sergio Rubio <rubiojr@frameos.org> - 1.7.5-2
 - bumped release
 - 1.7.5 db delta fixed
