@@ -1,8 +1,8 @@
 %define abiquo_basedir /opt/abiquo
 
 Name:           abiquo-server
-Version:        1.7.5
-Release:        4%{?dist}%{?buildstamp}
+Version:        1.7.6
+Release:        1%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
@@ -11,9 +11,7 @@ Source0:        server.war
 Source1:        abiquo.properties.server
 Source2:        abiquo-accounting.cron
 Source3:        kinton-schema.sql
-Source4:	kinton-delta-1_7_0-to-1_7_5.sql
-Source5:	ABICLOUDPREMIUM-1464-trigger-fix.sql
-Source6:	ABICLOUDPREMIUM-1464-volumes-fix.sql
+Source4:	kinton-delta-1_7_5-to-1_7_6.sql
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server 
 Requires:       /usr/sbin/sendmail /usr/bin/which
@@ -54,6 +52,9 @@ rm -rf $RPM_BUILD_ROOT
 %{abiquo_basedir}/config/examples/abiquo.properties.server
 
 %changelog
+* Wed Apr 13 2011 Sergio Rubio <rubiojr@frameos.org> - 1.7.6-1
+- bumped version
+
 * Tue Apr 05 2011 Sergio Rubio <srubio@abiquo.com> - 1.7.5-4
 - readed deltas and schemas
 - add ABICLOUDPREMIUM-1464 patches
