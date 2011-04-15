@@ -2,7 +2,7 @@
 
 Name:           abiquo-server
 Version:        1.7.6
-Release:        1%{?dist}%{?buildstamp}
+Release:        2%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
@@ -36,8 +36,6 @@ mkdir -p $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 mkdir -p %{buildroot}/%{_sysconfdir}/cron.d/
 cp %{SOURCE3} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp %{SOURCE4} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
-cp %{SOURCE5} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
-cp %{SOURCE6} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp -r %{SOURCE1} $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 /usr/bin/unzip -d $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/webapps/server/ %{SOURCE0}
 cp %{SOURCE2} %{buildroot}/%{_sysconfdir}/cron.d/abiquo-accounting
@@ -52,7 +50,10 @@ rm -rf $RPM_BUILD_ROOT
 %{abiquo_basedir}/config/examples/abiquo.properties.server
 
 %changelog
-* Wed Apr 13 2011 Sergio Rubio <rubiojr@frameos.org> - 1.7.6-1
+* Fri Apr 15 2011 Sergio Rubio <srubio@abiquo.com> - 1.7.6-2
+- fixed install section
+
+* Wed Apr 13 2011 Sergio Rubio <srubio@abiquo.com> - 1.7.6-1
 - bumped version
 
 * Tue Apr 05 2011 Sergio Rubio <srubio@abiquo.com> - 1.7.5-4
