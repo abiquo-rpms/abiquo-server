@@ -1908,7 +1908,8 @@ CREATE TRIGGER `kinton`.`datacenter_created` AFTER INSERT ON `kinton`.`datacente
 CREATE TRIGGER `kinton`.`datacenter_deleted` AFTER DELETE ON `kinton`.`datacenter`
   FOR EACH ROW BEGIN
     IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN
-      DELETE FROM cloud_usage_stats WHERE idDataCenter = OLD.idDataCenter;
+	DELETE FROM dc_enterprise_stats WHERE idDataCenter = OLD.idDataCenter;
+      	DELETE FROM cloud_usage_stats WHERE idDataCenter = OLD.idDataCenter;
     END IF;
   END;
 --
@@ -2218,6 +2219,7 @@ CREATE TRIGGER `kinton`.`update_virtualmachine_update_stats` AFTER UPDATE ON `ki
         DECLARE idDataCenterObj INTEGER;
         DECLARE idVirtualAppObj INTEGER;
         DECLARE idVirtualDataCenterObj INTEGER;
+	-- For debugging purposes only
         -- INSERT INTO debug_msg (msg) VALUES (CONCAT('UPDATE: ', OLD.idType, NEW.idType, OLD.state, NEW.state));	
         IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN   
         --  Updating enterprise_resources_stats: VCPU Used, Memory Used, Local Storage Used
@@ -2238,8 +2240,38 @@ CREATE TRIGGER `kinton`.`update_virtualmachine_update_stats` AFTER UPDATE ON `ki
         WHERE NEW.idVM = nvi.idVM
         AND nvi.idNode = n.idNode
         AND vapp.idVirtualApp = n.idVirtualApp;     
-        IF NEW.idType = 1 AND (NEW.state != OLD.state) THEN
-            -- Activates if state changes or machines are captured
+	IF NEW.idType = 1 AND OLD.idType = 0 THEN
+		-- Imported !!!
+		UPDATE IGNORE cloud_usage_stats SET vMachinesTotal = vMachinesTotal+1
+                WHERE idDataCenter = idDataCenterObj;
+                UPDATE IGNORE vapp_enterprise_stats SET vmCreated = vmCreated+1
+                WHERE idVirtualApp = idVirtualAppObj;
+                UPDATE IGNORE vdc_enterprise_stats SET vmCreated = vmCreated+1
+                WHERE idVirtualDataCenter = idVirtualDataCenterObj;
+		IF NEW.state = "RUNNING" THEN 	
+			UPDATE IGNORE vapp_enterprise_stats SET vmActive = vmActive+1
+		        WHERE idVirtualApp = idVirtualAppObj;
+		        UPDATE IGNORE vdc_enterprise_stats SET vmActive = vmActive+1
+		        WHERE idVirtualDataCenter = idVirtualDataCenterObj;
+		        UPDATE IGNORE cloud_usage_stats SET vMachinesRunning = vMachinesRunning+1
+		        WHERE idDataCenter = idDataCenterObj;       
+		        UPDATE IGNORE enterprise_resources_stats 
+		            SET vCpuUsed = vCpuUsed + NEW.cpu,
+		                memoryUsed = memoryUsed + NEW.ram,
+		                localStorageUsed = localStorageUsed + NEW.hd
+		        WHERE idEnterprise = NEW.idEnterprise;
+		        UPDATE IGNORE dc_enterprise_stats 
+		        SET     vCpuUsed = vCpuUsed + NEW.cpu,
+		            memoryUsed = memoryUsed + NEW.ram,
+		            localStorageUsed = localStorageUsed + NEW.hd
+		        WHERE idEnterprise = NEW.idEnterprise AND idDataCenter = idDataCenterObj;
+		        UPDATE IGNORE vdc_enterprise_stats 
+		        SET     vCpuUsed = vCpuUsed + NEW.cpu,
+		            memoryUsed = memoryUsed + NEW.ram,
+		            localStorageUsed = localStorageUsed + NEW.hd
+		        WHERE idVirtualDataCenter = idVirtualDataCenterObj;	
+		END IF;
+	ELSEIF NEW.idType = 1 AND (NEW.state != OLD.state) THEN
             IF NEW.state = "RUNNING" THEN 
                 -- New Active
                 UPDATE IGNORE vapp_enterprise_stats SET vmActive = vmActive+1
@@ -2514,7 +2546,10 @@ CREATE TRIGGER `kinton`.`virtualdatacenter_created` AFTER INSERT ON `kinton`.`vi
 |
 CREATE TRIGGER `kinton`.`virtualdatacenter_updated` AFTER UPDATE ON `kinton`.`virtualdatacenter`
     FOR EACH ROW BEGIN
+    DECLARE vlanNetworkIdObj INTEGER;    
+        	  DECLARE networkNameObj VARCHAR(40);
         IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN   
+            -- INSERT INTO debug_msg (msg) VALUES (CONCAT('OLD.networktypeID ', IFNULL(OLD.networktypeID,'NULL'),'NEW.networktypeID ', IFNULL(NEW.networktypeID,'NULL')));
             -- Checks for changes
             IF OLD.name != NEW.name THEN
                 -- Name changed !!!
@@ -2533,6 +2568,26 @@ CREATE TRIGGER `kinton`.`virtualdatacenter_updated` AFTER UPDATE ON `kinton`.`vi
                 vlanReserved = vlanReserved - OLD.vlanHard + NEW.vlanHard
             WHERE idVirtualDataCenter = NEW.idVirtualDataCenter;            
         END IF;
+        IF OLD.networktypeID IS NOT NULL AND NEW.networktypeID IS NULL THEN
+        -- Remove VlanUsed
+            SELECT DISTINCT vn.network_id, vn.network_name into vlanNetworkIdObj, networkNameObj
+		    FROM vlan_network vn
+		    WHERE vn.network_id = OLD.networktypeID;
+            -- INSERT INTO debug_msg (msg) VALUES (CONCAT('VDC UPDATED -> OLD.networktypeID ', IFNULL(OLD.networktypeID,'NULL'), 'Enterprise: ',IFNULL(OLD.idEnterprise,'NULL'),' VDC: ',IFNULL(OLD.idVirtualDataCenter,'NULL'),IFNULL(vlanNetworkIdObj,'NULL'),IFNULL(networkNameObj,'NULL')));
+            IF EXISTS( SELECT * FROM `information_schema`.ROUTINES WHERE ROUTINE_SCHEMA='kinton' AND ROUTINE_TYPE='PROCEDURE' AND ROUTINE_NAME='AccountingVLANRegisterEvents' ) THEN
+                CALL AccountingVLANRegisterEvents('DELETE_VLAN',vlanNetworkIdObj, networkNameObj, OLD.idVirtualDataCenter,OLD.idEnterprise);
+            END IF;
+            -- Statistics
+            UPDATE IGNORE cloud_usage_stats
+                SET     vlanUsed = vlanUsed - 1
+                WHERE idDataCenter = -1;
+            UPDATE IGNORE enterprise_resources_stats 
+                SET     vlanUsed = vlanUsed - 1
+                WHERE idEnterprise = OLD.idEnterprise;
+            UPDATE IGNORE vdc_enterprise_stats 
+                SET     vlanUsed = vlanUsed - 1
+            WHERE idVirtualDataCenter = OLD.idVirtualDataCenter;
+        END IF;
     END;
 |
 -- ******************************************************************************************
@@ -2543,12 +2598,41 @@ CREATE TRIGGER `kinton`.`virtualdatacenter_updated` AFTER UPDATE ON `kinton`.`vi
 -- Fires: On an DELETE for the virtualdatacenter table
 --
 -- ******************************************************************************************
-CREATE TRIGGER `kinton`.`virtualdatacenter_deleted` AFTER DELETE ON `kinton`.`virtualdatacenter`
+CREATE TRIGGER `kinton`.`virtualdatacenter_deleted` BEFORE DELETE ON `kinton`.`virtualdatacenter`
     FOR EACH ROW BEGIN
+	DECLARE currentIdManagement INTEGER DEFAULT -1;
+	DECLARE currentDataCenter INTEGER DEFAULT -1;
+	DECLARE currentIpAddress VARCHAR(20) DEFAULT '';
+	DECLARE no_more_ipsfreed INT;
+	DECLARE curIpFreed CURSOR FOR SELECT dc.idDataCenter, ipm.ip, ra.idManagement	
+           FROM ip_pool_management ipm, network_configuration nc, vlan_network vn, datacenter dc, rasd_management ra
+           WHERE ipm.dhcp_service_id=nc.dhcp_service_id
+           AND vn.network_configuration_id = nc.network_configuration_id
+           AND vn.network_id = dc.network_id
+           AND ra.idManagement = ipm.idManagement
+           AND ra.idVirtualDataCenter = OLD.idVirtualDataCenter;
+	   DECLARE CONTINUE HANDLER FOR NOT FOUND SET no_more_ipsfreed = 1;	  
         IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN
             UPDATE IGNORE cloud_usage_stats SET numVDCCreated = numVDCCreated-1 WHERE idDataCenter = OLD.idDataCenter;  
             -- Remove Stats
-            DELETE FROM vdc_enterprise_stats WHERE idVirtualDataCenter = OLD.idVirtualDataCenter;
+            DELETE FROM vdc_enterprise_stats WHERE idVirtualDataCenter = OLD.idVirtualDataCenter;	
+           -- 	
+	SET no_more_ipsfreed = 0;	    
+	    OPEN curIpFreed;  	    	
+   		my_loop:WHILE(no_more_ipsfreed=0) DO 
+   		FETCH curIpFreed INTO currentDataCenter, currentIpAddress, currentIdManagement;
+		IF no_more_ipsfreed=1 THEN
+                	LEAVE my_loop;
+	         END IF;
+--		INSERT INTO debug_msg (msg) VALUES (CONCAT('IP_FREED: ',currentIpAddress, ' - idManagement: ', currentIdManagement, ' - OLD.idVirtualDataCenter: ', OLD.idVirtualDataCenter, ' - idEnterpriseObj: ', OLD.idEnterprise));
+		IF EXISTS( SELECT * FROM `information_schema`.ROUTINES WHERE ROUTINE_SCHEMA='kinton' AND ROUTINE_TYPE='PROCEDURE' AND ROUTINE_NAME='AccountingIPsRegisterEvents' ) THEN
+               		CALL AccountingIPsRegisterEvents('IP_FREED',currentIdManagement,currentIpAddress,OLD.idVirtualDataCenter, OLD.idEnterprise);
+           	END IF;                    
+		UPDATE IGNORE cloud_usage_stats SET publicIPsUsed = publicIPsUsed-1 WHERE idDataCenter = currentDataCenter;
+		UPDATE IGNORE dc_enterprise_stats SET publicIPsReserved = publicIPsReserved-1 WHERE idDataCenter = currentDataCenter;
+		UPDATE IGNORE enterprise_resources_stats SET publicIPsReserved = publicIPsReserved-1 WHERE idEnterprise = OLD.idEnterprise;	
+	    END WHILE my_loop;	       
+	    CLOSE curIpFreed;
         END IF;
     END;
 --
@@ -2759,8 +2843,8 @@ CREATE TRIGGER `kinton`.`update_rasd_management_update_stats` AFTER UPDATE ON `k
                 END IF;
             END IF;
             -- From old `autoDetachVolume`
-            UPDATE IGNORE volume_management v set v.state = 0
-            WHERE v.idManagement = OLD.idManagement;
+            -- UPDATE IGNORE volume_management v set v.state = 0
+            -- WHERE v.idManagement = OLD.idManagement;
             -- Checks for used IPs
             IF OLD.idVM IS NULL AND NEW.idVM IS NOT NULL THEN
                 -- Query for datacenter
@@ -3098,14 +3182,15 @@ END;
 -- ******************************************************************************************
 CREATE TRIGGER `kinton`.`dclimit_created` AFTER INSERT ON `kinton`.`enterprise_limits_by_datacenter`
     FOR EACH ROW BEGIN      
-        IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN       
-            --  Creates a New row in dc_enterprise_stats to store this enterprise's statistics
-            INSERT IGNORE INTO dc_enterprise_stats 
+        IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN                   
+        		 IF (NEW.idEnterprise != 0 AND NEW.idDataCenter != 0) THEN
+        INSERT IGNORE INTO dc_enterprise_stats 
                 (idDataCenter,idEnterprise,vCpuReserved,vCpuUsed,memoryReserved,memoryUsed,localStorageReserved,localStorageUsed,
                 extStorageReserved,extStorageUsed,repositoryReserved,repositoryUsed,publicIPsReserved,publicIPsUsed,vlanReserved,vlanUsed)
             VALUES 
                 (NEW.idDataCenter, NEW.idEnterprise, NEW.cpuHard, 0, NEW.ramHard, 0, NEW.hdHard, 0,
                 NEW.storageHard, 0, NEW.repositoryHard, 0, NEW.publicIPHard, 0, NEW.vlanHard, 0);
+                END IF;
             -- cloud_usage_stats
             UPDATE IGNORE cloud_usage_stats 
                 SET vCpuReserved = vCpuReserved + NEW.cpuHard,
@@ -3128,13 +3213,15 @@ CREATE TRIGGER `kinton`.`dclimit_updated` AFTER UPDATE ON `kinton`.`enterprise_l
 FOR EACH ROW BEGIN     
 	 IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN       
                 -- Limit is not used anymore. Statistics are removed
-                DELETE FROM dc_enterprise_stats WHERE idEnterprise = OLD.idEnterprise AND idDataCenter = OLD.idDataCenter;                
+                DELETE FROM dc_enterprise_stats WHERE idEnterprise = OLD.idEnterprise AND idDataCenter = OLD.idDataCenter;
+                IF (NEW.idEnterprise != 0 AND NEW.idDataCenter != 0) THEN
                 INSERT IGNORE INTO dc_enterprise_stats 
-                (idDataCenter,idEnterprise,vCpuReserved,vCpuUsed,memoryReserved,memoryUsed,localStorageReserved,localStorageUsed,
-                extStorageReserved,extStorageUsed,repositoryReserved,repositoryUsed,publicIPsReserved,publicIPsUsed,vlanReserved,vlanUsed)
-            	VALUES 
-                (NEW.idDataCenter, NEW.idEnterprise, NEW.cpuHard, 0, NEW.ramHard, 0, NEW.hdHard, 0,
-                NEW.storageHard, 0, NEW.repositoryHard, 0, NEW.publicIPHard, 0, NEW.vlanHard, 0);       
+	                (idDataCenter,idEnterprise,vCpuReserved,vCpuUsed,memoryReserved,memoryUsed,localStorageReserved,localStorageUsed,
+	                extStorageReserved,extStorageUsed,repositoryReserved,repositoryUsed,publicIPsReserved,publicIPsUsed,vlanReserved,vlanUsed)
+	            	VALUES 
+	                (NEW.idDataCenter, NEW.idEnterprise, NEW.cpuHard, 0, NEW.ramHard, 0, NEW.hdHard, 0,
+	                NEW.storageHard, 0, NEW.repositoryHard, 0, NEW.publicIPHard, 0, NEW.vlanHard, 0);       
+                END IF;
 		-- 
                 UPDATE IGNORE cloud_usage_stats 
                 SET vCpuReserved = vCpuReserved - OLD.cpuHard + NEW.cpuHard,
@@ -3855,719 +3942,3 @@ CREATE TABLE `tasks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CALL `kinton`.`add_version_column_to_all`();
-USE kinton;
---
--- ACCOUNTING SCRIPTS
---
-
---
--- ACCOUNTING SCHEMA
--- remove 'accounting' path when calling this script
---
-
-DROP TABLE IF EXISTS `kinton`.`accounting_event_vm`;
-DROP TABLE IF EXISTS `kinton`.`accounting_event_storage`;
-DROP TABLE IF EXISTS `kinton`.`accounting_event_ips`;
-DROP TABLE IF EXISTS `kinton`.`accounting_event_vlan`;
-DROP TABLE IF EXISTS `kinton`.`accounting_event_detail`;
-
--- Events for VM
-CREATE TABLE `kinton`.`accounting_event_vm` (
-  `idVMAccountingEvent` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `idVM` INTEGER(10) UNSIGNED NOT NULL,
-  `idEnterprise` INTEGER(10) UNSIGNED NOT NULL,
-  `idVirtualDataCenter` INTEGER(10) UNSIGNED NOT NULL,
-  `idVirtualApp` INTEGER(10) UNSIGNED NOT NULL,
-  `cpu` INTEGER(10) UNSIGNED NOT NULL,
-  `ram` INTEGER(10) UNSIGNED NOT NULL,
-  `hd` BIGINT(20) UNSIGNED NOT NULL,
-  `startTime` TIMESTAMP NULL,
-  `stopTime` TIMESTAMP NULL,
-  `consolidated` BOOLEAN NOT NULL default 0,
-  `version_c` int(11) DEFAULT '0',
-   PRIMARY KEY (`idVMAccountingEvent`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
-
--- Events for Storage
-CREATE TABLE `kinton`.`accounting_event_storage` (
-  `idStorageAccountingEvent` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `idResource` VARCHAR(50) DEFAULT NULL,
-  `resourceName` VARCHAR(511) DEFAULT NULL,
-  -- idManagement is necessary?
-  `idVM` INTEGER(10) unsigned NULL,
-  `idEnterprise` INTEGER(10) UNSIGNED NOT NULL,
-  `idVirtualDataCenter` INTEGER(10) UNSIGNED NOT NULL,
-  `idVirtualApp` INTEGER(10) UNSIGNED NULL,
-  `sizeReserved` BIGINT UNSIGNED NOT NULL, -- SELECT limitResource INTO limitResourceObj FROM rasd r
-  `startTime` TIMESTAMP NULL,
-  `stopTime` TIMESTAMP NULL,
-  `consolidated` BOOLEAN NOT NULL default 0,
-  `version_c` int(11) DEFAULT '0',
-   PRIMARY KEY (`idStorageAccountingEvent`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
-
--- Events for IPs Reserved
-CREATE TABLE `kinton`.`accounting_event_ips` (
-  `idIPsAccountingEvent` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  -- `idResource` INTEGER(10) UNSIGNED NOT NULL, no idResource if IP is not assigned to a VM
-  `idManagement`  INTEGER(10) UNSIGNED NOT NULL,
-  -- `idVM` INTEGER(10) unsigned NOT NULL,
-  `idEnterprise` INTEGER(10) UNSIGNED NOT NULL,
-  `idVirtualDataCenter` INTEGER(10) UNSIGNED NOT NULL,
-  -- `idVirtualApp` INTEGER(10) UNSIGNED NULL,
-  `ip` VARCHAR(20) NOT NULL,
-  `startTime` TIMESTAMP NULL,
-  `stopTime` TIMESTAMP NULL,
-  `consolidated` BOOLEAN NOT NULL default 0,
-  `version_c` int(11) DEFAULT '0',
-   PRIMARY KEY (`idIPsAccountingEvent`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8 ;
-
--- Events for VLANs created
-CREATE TABLE `kinton`.`accounting_event_vlan` (
-  `idVLANAccountingEvent` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `vlan_network_id` INT(11) UNSIGNED NOT NULL,
-  -- `network_id` INT(11) UNSIGNED NOT NULL,
-  `idEnterprise` INTEGER(10) UNSIGNED NOT NULL,
-  `idVirtualDataCenter` INTEGER(10) UNSIGNED NOT NULL,
-  `network_name` VARCHAR(40) NOT NULL,
-  `startTime` TIMESTAMP NULL,
-  `stopTime` TIMESTAMP NULL,
-  `consolidated` BOOLEAN NOT NULL default 0,
-  `version_c` int(11) DEFAULT '0',
-   PRIMARY KEY (`idVLANAccountingEvent`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8 ;
-
--- Consolidated data
-CREATE TABLE `kinton`.`accounting_event_detail` (
-  `idAccountingEvent` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `startTime` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `endTime` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `idAccountingResourceType` TINYINT(4) NOT NULL COMMENT '1 - VirtualMachine-vcpu; 2 - VirtualMachine-vram; 3 - VirtualMachine-vhd; 4 - ExternalStorage; 5 - IPAddress;', 
-  `resourceType` VARCHAR(255)  NOT NULL,
-  `resourceUnits` BIGINT(20) NOT NULL,
-  `resourceName` VARCHAR(511)  NOT NULL,
-  `idEnterprise` INTEGER(11) UNSIGNED NOT NULL,
-  `idVirtualDataCenter` INTEGER(11) UNSIGNED NOT NULL,
-  `idVirtualApp` INTEGER(11) UNSIGNED,
-  `idVirtualMachine` INTEGER(11) UNSIGNED,
-  `enterpriseName` VARCHAR(255)  NOT NULL,
-  `virtualDataCenter` VARCHAR(255)  NOT NULL,
-  `virtualApp` VARCHAR(255) ,
-  `virtualMachine` VARCHAR(255) ,
-  `version_c` int(11) DEFAULT '0',
-  PRIMARY KEY (`idAccountingEvent`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
-
-
-DROP VIEW IF EXISTS LAST_HOUR_USAGE_VM_VW;
-DROP VIEW IF EXISTS LAST_HOUR_USAGE_STORAGE_VW;
-DROP VIEW IF EXISTS LAST_HOUR_USAGE_IPS_VW;
-DROP VIEW IF EXISTS LAST_HOUR_USAGE_VLAN_VW;
-
--- VIEW to calculate Event_Detail for VM Accounting
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `LAST_HOUR_USAGE_VM_VW` AS 
-  select 
-    `accounting_event_vm`.idVMAccountingEvent AS idVMAccountingEvent,
-    `accounting_event_vm`.idVM AS idVM,
-    `accounting_event_vm`.idEnterprise AS idEnterprise,
-    `accounting_event_vm`.idVirtualDataCenter AS idVirtualDataCenter,
-    `accounting_event_vm`.idVirtualApp AS idVirtualApp,
-    `accounting_event_vm`.cpu AS cpu,
-    `accounting_event_vm`.ram AS ram,
-    `accounting_event_vm`.hd AS hd,
-    `accounting_event_vm`.startTime AS startTime,
-    `accounting_event_vm`.stopTime AS stopTime,
-    (unix_timestamp(`accounting_event_vm`.stopTime) - unix_timestamp(`accounting_event_vm`.startTime)) AS `DELTA_TIME`,
-    from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600))) AS `ROUNDED_HOUR`,
-    CONCAT(IF (`virtualmachine`.`description` IS NULL, '', `virtualmachine`.`description`),' - ', `virtualmachine`.`name`) AS `VIRTUAL_MACHINE`,
-    `virtualapp`.`name` AS `VIRTUAL_APP`,
-    `virtualdatacenter`.`name` AS `VIRTUAL_DATACENTER`,
-    `enterprise`.`name` AS `VIRTUAL_ENTERPRISE` 
-  from 
-    ((((`accounting_event_vm` join `virtualmachine` on((`accounting_event_vm`.idVM = `virtualmachine`.`idVM`))) join `virtualapp` on((`accounting_event_vm`.idVirtualApp = `virtualapp`.`idVirtualApp`))) join `virtualdatacenter` on((`accounting_event_vm`.idVirtualDataCenter = `virtualdatacenter`.`idVirtualDataCenter`))) join `enterprise` on((`accounting_event_vm`.idEnterprise = `enterprise`.`idEnterprise`))) 
-  where 
-    -- Machine is still ON
-    ((`accounting_event_vm`.stopTime is null)
-    -- Machine was ON for less than 60 seconds
-    or ((`accounting_event_vm`.stopTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_vm`.stopTime) - unix_timestamp(`accounting_event_vm`.startTime)) > 3600)) or ((`accounting_event_vm`.startTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_vm`.stopTime) - unix_timestamp(`accounting_event_vm`.startTime)) <= 3600)));
-
--- VIEW to calculate Event_Detail for Storage Accounting
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `LAST_HOUR_USAGE_STORAGE_VW` AS 
-select 
-    `accounting_event_storage`.idStorageAccountingEvent AS idStorageAccountingEvent,
-    `accounting_event_storage`.idVM AS idVM,
-    `accounting_event_storage`.idEnterprise AS idEnterprise,
-    `accounting_event_storage`.idVirtualDataCenter AS idVirtualDataCenter,
-    `accounting_event_storage`.idVirtualApp AS idVirtualApp,
-    `accounting_event_storage`.idResource AS idResource,
-    `accounting_event_storage`.resourceName AS resourceName,
-    `accounting_event_storage`.sizeReserved AS sizeReserved,    
-    `accounting_event_storage`.startTime AS startTime,
-    `accounting_event_storage`.stopTime AS stopTime,
-    (unix_timestamp(`accounting_event_storage`.stopTime) - unix_timestamp(`accounting_event_storage`.startTime)) AS `DELTA_TIME`,
-    from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600))) AS `ROUNDED_HOUR`,
-    -- `virtualmachine`.`name` AS `VIRTUAL_MACHINE`,
-    -- `virtualapp`.`name` AS `VIRTUAL_APP`,
-    `virtualdatacenter`.`name` AS `VIRTUAL_DATACENTER`,
-    `enterprise`.`name` AS `VIRTUAL_ENTERPRISE` 
-  from 
-    (((`accounting_event_storage` join `virtualdatacenter` on(`accounting_event_storage`.idVirtualDataCenter = `virtualdatacenter`.`idVirtualDataCenter`))
-    join `enterprise` on(`accounting_event_storage`.idEnterprise = `enterprise`.`idEnterprise`))) 
-  where 
-    -- Storage volume is still ON
-    ((`accounting_event_storage`.stopTime is null)
-    -- Storage volume was ON for less than 60 seconds
-    or ((`accounting_event_storage`.stopTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_storage`.stopTime) - unix_timestamp(`accounting_event_storage`.startTime)) > 3600)) or ((`accounting_event_storage`.startTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_storage`.stopTime) - unix_timestamp(`accounting_event_storage`.startTime)) <= 3600)));
-
--- VIEW to calculate Event_Detail for IPs Accounting
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `LAST_HOUR_USAGE_IPS_VW` AS 
-select 
-    `accounting_event_ips`.idIPsAccountingEvent AS idIPsAccountingEvent,
-    `accounting_event_ips`.idEnterprise AS idEnterprise,
-    `accounting_event_ips`.idVirtualDataCenter AS idVirtualDataCenter,
-    `accounting_event_ips`.ip AS ip,    
-    `accounting_event_ips`.startTime AS startTime,
-    `accounting_event_ips`.stopTime AS stopTime,
-    (unix_timestamp(`accounting_event_ips`.stopTime) - unix_timestamp(`accounting_event_ips`.startTime)) AS `DELTA_TIME`,
-    from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600))) AS `ROUNDED_HOUR`,
-    -- `virtualmachine`.`name` AS `VIRTUAL_MACHINE`,
-    -- `virtualapp`.`name` AS `VIRTUAL_APP`,
-    `virtualdatacenter`.`name` AS `VIRTUAL_DATACENTER`,
-    `enterprise`.`name` AS `VIRTUAL_ENTERPRISE` 
-  from 
-    (((`accounting_event_ips` join `virtualdatacenter` on(`accounting_event_ips`.idVirtualDataCenter = `virtualdatacenter`.`idVirtualDataCenter`))
-    join `enterprise` on(`accounting_event_ips`.idEnterprise = `enterprise`.`idEnterprise`))) 
-  where 
-    -- IP is still Reserved
-    ((`accounting_event_ips`.stopTime is null)
-    -- IP was reserved for less than 60 seconds
-    or ((`accounting_event_ips`.stopTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_ips`.stopTime) - unix_timestamp(`accounting_event_ips`.startTime)) > 3600)) or ((`accounting_event_ips`.startTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_ips`.stopTime) - unix_timestamp(`accounting_event_ips`.startTime)) <= 3600)));
-
-
-    -- VIEW to calculate Event_Detail for VLAN Accounting
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `LAST_HOUR_USAGE_VLAN_VW` AS 
-select 
-    `accounting_event_vlan`.idVLANAccountingEvent AS idVLANAccountingEvent,
-    `accounting_event_vlan`.idEnterprise AS idEnterprise,
-    `accounting_event_vlan`.idVirtualDataCenter AS idVirtualDataCenter,
-    `accounting_event_vlan`.network_name AS networkName,    
-    `accounting_event_vlan`.startTime AS startTime,
-    `accounting_event_vlan`.stopTime AS stopTime,
-    (unix_timestamp(`accounting_event_vlan`.stopTime) - unix_timestamp(`accounting_event_vlan`.startTime)) AS `DELTA_TIME`,
-    from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600))) AS `ROUNDED_HOUR`,
-    `virtualdatacenter`.`name` AS `VIRTUAL_DATACENTER`,
-    `enterprise`.`name` AS `VIRTUAL_ENTERPRISE` 
-  from 
-    (((`accounting_event_vlan` join `virtualdatacenter` on(`accounting_event_vlan`.idVirtualDataCenter = `virtualdatacenter`.`idVirtualDataCenter`))
-    join `enterprise` on(`accounting_event_vlan`.idEnterprise = `enterprise`.`idEnterprise`))) 
-  where 
-    -- IP is still Reserved
-    ((`accounting_event_vlan`.stopTime is null)
-    -- IP was reserved for less than 60 seconds
-    or ((`accounting_event_vlan`.stopTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_vlan`.stopTime) - unix_timestamp(`accounting_event_vlan`.startTime)) > 3600)) or ((`accounting_event_vlan`.startTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_vlan`.stopTime) - unix_timestamp(`accounting_event_vlan`.startTime)) <= 3600)));
-    
--- Only for debugging at development stage
--- DROP  TABLE IF EXISTS `kinton`.`debug_msg`;
--- CREATE TABLE `kinton`.`debug_msg` (
---   `msg` varchar(255) NOT NULL
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
--- INSERT INTO debug_msg (msg) VALUES (CONCAT('Trigger Activated: ',idVirtualMachine,'-',idType,'-',oldState,'-',newState,'-', ramValue,'-',cpuValue,'-',hdValue));
-
---
--- ***********************************************************************************************************************
---
-
---
--- ACCOUNTING PROCEDURES
---    
-
-DROP PROCEDURE IF EXISTS `kinton`.`AccountingVMRegisterEvents`;
-DROP PROCEDURE IF EXISTS `kinton`.`AccountingStorageRegisterEvents`;
-DROP PROCEDURE IF EXISTS `kinton`.`AccountingIPsRegisterEvents`;
-DROP PROCEDURE IF EXISTS `kinton`.`AccountingVLANRegisterEvents`;
-DROP PROCEDURE IF EXISTS `kinton`.`UpdateAccounting`;
-
-
-DELIMITER |
--- 
--- AccountingVMRegisterEvents: Registers Events related to DEPLOY or UNDEPLOY virtualmachines for Accounting
--- Inserts new rows with startTime=NOW() for each new DEPLOY_VM event
--- Updates existing rows with stopTime=NOW() for each new UNDEPLOY_VM event
--- 
-CREATE PROCEDURE `kinton`.AccountingVMRegisterEvents(
-    IN idVirtualMachine INT(10) UNSIGNED, 
-    IN idType INT(1) UNSIGNED, 
-    IN oldState VARCHAR(50), 
-    IN newState VARCHAR(50), 
-    IN ramValue INT(7) unsigned,  
-    IN cpuValue INT(10) unsigned,
-    IN hdValue BIGINT(20) unsigned)
-BEGIN
-    IF idType = 1 AND (oldState != newState) AND (newState = "RUNNING") THEN
-    -- Deploy Event Detected
-        INSERT INTO accounting_event_vm (idVM,idEnterprise,idVirtualDataCenter,idVirtualApp,cpu,ram,hd,startTime,stopTime) 
-        SELECT
-            vm.idVM, vapp.idEnterprise, vapp.idVirtualDataCenter, n.idVirtualApp,  
-            cpuValue,
-            ramValue,           
-            hdValue,
-            now(),
-            null
-          FROM nodevirtualimage nvi, node n, virtualapp vapp, virtualmachine vm
-        WHERE vm.idVM = nvi.idVM
-        AND nvi.idNode = n.idNode
-        AND vapp.idVirtualApp = n.idVirtualApp
-        AND vm.idVM = idVirtualMachine;
-    END IF;
-    --  
-    IF idType = 1 AND (newState = "NOT_DEPLOYED" OR newState = "UNKNOWN" OR (newState = "CRASHED" AND oldState != "UNKNOWN")) THEN          
-    -- Undeploy Event Detected
-        UPDATE
-          accounting_event_vm
-        SET
-          stopTime=now()
-        WHERE
-          accounting_event_vm.idVM = idVirtualMachine
-          and
-          accounting_event_vm.stopTime is null;
-    END IF;
-END;
-|
--- 
--- AccountingStorageRegisterEvents
---
--- Triggered when user creates, updates or deletes a volume in a VirtualDataCenter. All this events are stored in 'accounting_event_storage' with its timestamps.
--- This procedure performs different actions managed by 'action' parameter values:'CREATE_STORAGE','UPDATE_STORAGE','
--- 
-CREATE PROCEDURE `kinton`.AccountingStorageRegisterEvents(
-    IN action VARCHAR(15),
-    IN idThisResource VARCHAR(50),
-    IN thisResourceName VARCHAR(255),
-    IN idThisVirtualDataCenter INT(10) UNSIGNED,
-    IN idThisEnterprise INT(10) UNSIGNED,  
-    IN sizeReserved BIGINT(20))
-BEGIN   
-    -- Storage Creation Event Detected (table rasd_management). Storage is converted to Bytes
-    IF action = "CREATE_STORAGE" THEN
-        INSERT INTO accounting_event_storage (idResource, resourceName, idVM,idEnterprise,idVirtualDataCenter,idVirtualApp,sizeReserved,startTime, stopTime)
-        SELECT idThisResource, thisResourceName, null, idThisEnterprise, idThisVirtualDataCenter, null, sizeReserved * 1048576, now(), null; 
-    END IF;
-    -- Storage Delete Event Detected (table rasd_management)
-    IF action = "DELETE_STORAGE" THEN   
-        UPDATE
-          accounting_event_storage
-        SET
-          stopTime=now()
-        WHERE
-          accounting_event_storage.idResource = idThisResource
-          AND
-          accounting_event_storage.stopTime is null;
-    END IF;
-    -- Storage Update Event Detected: update and insert a new one (table rasd)
-    IF action = "UPDATE_STORAGE" THEN   
-        UPDATE
-          accounting_event_storage
-        SET
-          stopTime=now()
-        WHERE
-          accounting_event_storage.idResource = idThisResource
-          AND
-          accounting_event_storage.stopTime is null;
-        INSERT INTO accounting_event_storage (idResource, resourceName, idVM,idEnterprise,idVirtualDataCenter,idVirtualApp,sizeReserved,startTime, stopTime)
-            SELECT idThisResource,thisResourceName, null, idThisEnterprise, idThisVirtualDataCenter, null, sizeReserved * 1048576, now(), null; 
-    END IF;
-END;
-|
--- 
--- AccountingIPsRegisterEvents
---
--- Triggered when user creates, updates or deletes a volume in a VirtualDataCenter. All this events are stored in 'accounting_event_storage' with its timestamps.
--- This procedure performs different actions managed by 'action' parameter values:'CREATE_STORAGE','UPDATE_STORAGE','
--- 
-CREATE PROCEDURE `kinton`.AccountingIPsRegisterEvents(
-    IN action VARCHAR(15),
-    IN idManagement INT(10) UNSIGNED,
-    IN ipAddress VARCHAR(20),
-    IN idThisVirtualDataCenter INT(10) UNSIGNED,
-    IN idThisEnterprise INT(10) UNSIGNED)
-BEGIN   
-    --  
-    -- IP Reserved Event Detected (table ip_pool_management)
-    IF action = "IP_RESERVED" THEN
-        INSERT INTO accounting_event_ips (idManagement,idEnterprise,idVirtualDataCenter,ip,startTime,stopTime)
-        SELECT idManagement, idThisEnterprise, idThisVirtualDataCenter, ipAddress, now(), null; 
-    END IF;
-    -- IP Freed Event Detected (table rasd_management)
-    IF action = "IP_FREED" THEN 
-        UPDATE
-          accounting_event_ips
-        SET
-          stopTime=now()
-        WHERE
-          accounting_event_ips.idManagement = idManagement
-          AND
-          accounting_event_ips.stopTime is null;
-    END IF; 
-END;
-|
--- 
--- AccountingVLANRegisterEvents
---
--- Triggered when user creates or deletes a VLAN in a VirtualDataCenter. All this events are stored in 'accounting_event_vlan' with its timestamps.
--- This procedure performs different actions managed by 'action' parameter values:'CREATE_VLAN','DELETE_VLAN','
--- 
-CREATE PROCEDURE `kinton`.AccountingVLANRegisterEvents(
-    IN action VARCHAR(15),
-    IN vlan_network_id INT(11) UNSIGNED,
-    IN network_name VARCHAR(40),
-    IN idThisVirtualDataCenter INT(10) UNSIGNED,
-    IN idThisEnterprise INT(10) UNSIGNED)
-BEGIN   
-    -- INSERT INTO debug_msg (msg) VALUES (CONCAT('PROCEDURE AccountingVLANRegisterEvents Activated: ',IFNULL(vlan_network_id,'NULL'),'-',IFNULL(network_name,'NULL'),'-',IFNULL(idThisVirtualDataCenter,'NULL'),'-',idThisEnterprise,'-',action,'-',now()));   
-    --  
-    -- VLAN Created Event Detected
-    IF action = "CREATE_VLAN" THEN
-        INSERT INTO accounting_event_vlan (vlan_network_id,idEnterprise,idVirtualDataCenter,network_name,startTime,stopTime) 
-        SELECT vlan_network_id, idThisEnterprise, idThisVirtualDataCenter, network_name, now(), null; 
-    END IF;
-    -- VLAN Deleted Event Detected
-    IF action = "DELETE_VLAN" THEN  
-        UPDATE
-          accounting_event_vlan
-        SET
-          stopTime=now()
-        WHERE
-          accounting_event_vlan.vlan_network_id = vlan_network_id
-          AND
-          accounting_event_vlan.stopTime is null;
-    END IF; 
-END;
-|
--- 
--- UpdateAccounting
---
--- Inserts rows at accounting_event_detail based on Views defined for VMs, Storage and IPs events
--- 
-CREATE PROCEDURE `kinton`.`UpdateAccounting`()
-    NOT DETERMINISTIC
-    SQL SECURITY DEFINER
-    COMMENT ''
-BEGIN
--- For VM Resources Accounting
-INSERT INTO accounting_event_detail(
-  `startTime`,
-  `endTime`, 
-  `idAccountingResourceType`,
-  `resourceType`,
-  `resourceUnits`,
-  `resourceName`, 
-  `idEnterprise`, 
-  `idVirtualDataCenter`, 
-  `idVirtualApp`, 
-  `idVirtualMachine`, 
-  `enterpriseName`, 
-  `virtualDataCenter`, 
-  `virtualApp`, 
-  `virtualMachine`)
-SELECT DISTINCT
-      T.`ROUNDED_HOUR`,
-      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
-      1,
-      'VirtualMachine-vcpu',
-      T.cpu,
-      T.`VIRTUAL_MACHINE`,
-      T.`idEnterprise`,
-      T.`idVirtualDataCenter`,
-      T.`idVirtualApp`,
-      T.`idVM`,
-      T.`VIRTUAL_ENTERPRISE`,
-      T.`VIRTUAL_DATACENTER`,
-      T.`VIRTUAL_APP`,
-      T.`VIRTUAL_MACHINE`
-FROM `LAST_HOUR_USAGE_VM_VW` T
-UNION ALL
-SELECT DISTINCT
-      T.`ROUNDED_HOUR`,
-      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
-      2,
-      'VirtualMachine-vram',
-      T.`ram`,
-      T.`VIRTUAL_MACHINE`,
-      T.`idEnterprise`,
-      T.`idVirtualDataCenter`,
-      T.`idVirtualApp`,
-      T.`idVM`,
-      T.`VIRTUAL_ENTERPRISE`,
-      T.`VIRTUAL_DATACENTER`,
-      T.`VIRTUAL_APP`,
-      T.`VIRTUAL_MACHINE`
-FROM `LAST_HOUR_USAGE_VM_VW` T
-UNION ALL
-SELECT DISTINCT
-      T.`ROUNDED_HOUR`,
-      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
-      3,
-      'VirtualMachine-vhd',
-      T.`hd`,
-      T.`VIRTUAL_MACHINE`,
-      T.`idEnterprise`,
-      T.`idVirtualDataCenter`,
-      T.`idVirtualApp`,
-      T.`idVM`,
-      T.`VIRTUAL_ENTERPRISE`,
-      T.`VIRTUAL_DATACENTER`,
-      T.`VIRTUAL_APP`,
-      T.`VIRTUAL_MACHINE`
-FROM `LAST_HOUR_USAGE_VM_VW` T
--- Storage
-UNION ALL
-SELECT DISTINCT
-      T.`ROUNDED_HOUR`,
-      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
-      4,
-      'ExternalStorage',
-      T.`sizeReserved`,
-      CONCAT(IF (T.`resourceName` IS NULL, '', T.`resourceName`), ' - ', T.`idResource`),
-      T.`idEnterprise`,
-      T.`idVirtualDataCenter`,
-      '',
-      NULL, -- T.`idVM`,
-      T.`VIRTUAL_ENTERPRISE`,
-      T.`VIRTUAL_DATACENTER`,
-      '',
-      ''      
-FROM `LAST_HOUR_USAGE_STORAGE_VW` T
--- IPs
-UNION ALL
-SELECT DISTINCT
-      T.`ROUNDED_HOUR`,
-      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
-      5,
-      'IPAddress',
-      1,
-      T.`ip`,
-      T.`idEnterprise`,
-      T.`idVirtualDataCenter`,
-      '',
-      NULL, -- idVM,
-      T.`VIRTUAL_ENTERPRISE`,
-      T.`VIRTUAL_DATACENTER`,
-      '',
-      ''      
-FROM `LAST_HOUR_USAGE_IPS_VW` T
--- VLANs
-UNION ALL
-SELECT DISTINCT
-      T.`ROUNDED_HOUR`,
-      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
-      6,
-      'VLAN',
-      1,
-      T.`networkName`,
-      T.`idEnterprise`,
-      T.`idVirtualDataCenter`,
-      '',
-      NULL, -- idVM,
-      T.`VIRTUAL_ENTERPRISE`,
-      T.`VIRTUAL_DATACENTER`,
-      '',
-      ''      
-FROM `LAST_HOUR_USAGE_VLAN_VW` T;
-END;
-|
--- 
--- DeleteOldRegisteredEvents
---
--- Auxiliar procedure to delete old rows from event registering tables
--- All events registered older than 'hours' parameter from now will be deleted
--- 
-DROP PROCEDURE IF EXISTS `kinton`.DeleteOldRegisteredEvents;
-CREATE PROCEDURE `kinton`.DeleteOldRegisteredEvents(    
-IN hours INT(2) UNSIGNED)
-BEGIN   
-    DELETE FROM accounting_event_vm  WHERE stopTime < date_sub(NOW(), INTERVAL hours HOUR);
-    DELETE FROM accounting_event_storage  WHERE stopTime < date_sub(NOW(), INTERVAL hours HOUR);
-    DELETE FROM accounting_event_ips  WHERE stopTime < date_sub(NOW(), INTERVAL hours HOUR);
-    DELETE FROM accounting_event_vlan  WHERE stopTime < date_sub(NOW(), INTERVAL hours HOUR);
-END;
-|
-DELIMITER ;
---
--- ***********************************************************************************************************************
---
-  
---
--- ACCOUNTING ADDITIONAL SQL VIEWS
---
-# SQL Manager 2005 for MySQL 3.7.0.1
-# ---------------------------------------
-# Host     : 10.60.1.80
-# Port     : 3306
-# Database : kinton
-
-USE kinton;
-
-SET FOREIGN_KEY_CHECKS=0;
-
-#
-# Structure for the `chargeback_simple` table : 
-#
-
-DROP TABLE IF EXISTS `chargeback_simple`;
-
-CREATE TABLE `chargeback_simple` (
-  `idAccountingResourceType` tinyint(4) NOT NULL,
-  `resourceType` varchar(20) NOT NULL,
-  `costPerHour` decimal(15,12) NOT NULL,
-  `version_c` int(11) DEFAULT '0',
-  PRIMARY KEY  (`idAccountingResourceType`),
-  UNIQUE KEY `idAccountingResourceType` (`idAccountingResourceType`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-
-#
-# Definition for the `HOURLY_USAGE_MAX_VW` view : 
-#
-
-DROP VIEW IF EXISTS `HOURLY_USAGE_MAX_VW`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `HOURLY_USAGE_MAX_VW` AS 
-  select 
-    `accounting_event_detail`.`startTime` AS `startTime`,
-    `accounting_event_detail`.`endTime` AS `endTime`,
-    `accounting_event_detail`.`idAccountingResourceType` AS `idAccountingResourceType`,
-    `accounting_event_detail`.`resourceType` AS `resourceType`,
-    `accounting_event_detail`.`resourceName` AS `resourceName`,
-    max(`accounting_event_detail`.`resourceUnits`) AS `resourceUnits`,
-    `accounting_event_detail`.`idEnterprise` AS `idEnterprise`,
-    `accounting_event_detail`.`idVirtualDataCenter` AS `idVirtualDataCenter`,
-    `accounting_event_detail`.`idVirtualApp` AS `idVirtualApp`,
-    `accounting_event_detail`.`idVirtualMachine` AS `idVirtualMachine`,
-    `accounting_event_detail`.`enterpriseName` AS `enterpriseName`,
-    `accounting_event_detail`.`virtualDataCenter` AS `virtualDataCenter`,
-    `accounting_event_detail`.`virtualApp` AS `virtualApp`,
-    `accounting_event_detail`.`virtualMachine` AS `virtualMachine` 
-  from 
-    `accounting_event_detail` 
-  group by 
-    `accounting_event_detail`.`startTime`,`accounting_event_detail`.`endTime`,`accounting_event_detail`.`idAccountingResourceType`,`accounting_event_detail`.`resourceType`,`accounting_event_detail`.`resourceName`,`accounting_event_detail`.`idEnterprise`,`accounting_event_detail`.`idVirtualDataCenter`,`accounting_event_detail`.`idVirtualApp`,`accounting_event_detail`.`idVirtualMachine`,`accounting_event_detail`.`enterpriseName`,`accounting_event_detail`.`virtualDataCenter`,`accounting_event_detail`.`virtualApp`,`accounting_event_detail`.`virtualMachine`;
-
-
-#
-# Definition for the `DAILY_USAGE_SUM_VW` view : 
-#
-
-DROP VIEW IF EXISTS `DAILY_USAGE_SUM_VW`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `DAILY_USAGE_SUM_VW` AS 
-  select 
-    cast(`v`.`startTime` as date) AS `startTime`,
-    cast(`v`.`startTime` as date) AS `endTime`,
-    `v`.`idAccountingResourceType` AS `idAccountingResourceType`,
-    `v`.`resourceType` AS `resourceType`,
-    sum(`v`.`resourceUnits`) AS `resourceUnits`,
-    `v`.`idEnterprise` AS `idEnterprise`,
-    `v`.`idVirtualDataCenter` AS `idVirtualDataCenter`,
-    `v`.`enterpriseName` AS `enterpriseName`,
-    `v`.`virtualDataCenter` AS `virtualDataCenter` 
-  from 
-    `HOURLY_USAGE_MAX_VW` `v` 
-  group by 
-    `v`.`idAccountingResourceType`,`v`.`resourceType`,`v`.`idEnterprise`,`v`.`idVirtualDataCenter`,`v`.`enterpriseName`,`v`.`virtualDataCenter`;
-
-#
-# Definition for the `HOURLY_USAGE_SUM_VW` view : 
-#
-
-DROP VIEW IF EXISTS `HOURLY_USAGE_SUM_VW`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `HOURLY_USAGE_SUM_VW` AS 
-  select 
-    `v`.`startTime` AS `startTime`,
-    `v`.`endTime` AS `endTime`,
-    `v`.`idAccountingResourceType` AS `idAccountingResourceType`,
-    `v`.`resourceType` AS `resourceType`,
-    sum(`v`.`resourceUnits`) AS `resourceUnits`,
-    `v`.`idEnterprise` AS `idEnterprise`,
-    `v`.`idVirtualDataCenter` AS `idVirtualDataCenter`,
-    `v`.`enterpriseName` AS `enterpriseName`,
-    `v`.`virtualDataCenter` AS `virtualDataCenter` 
-  from 
-    `HOURLY_USAGE_MAX_VW` `v` 
-  group by 
-    `v`.`startTime`,`v`.`endTime`,`v`.`idAccountingResourceType`,`v`.`resourceType`,`v`.`idEnterprise`,`v`.`idVirtualDataCenter`,`v`.`enterpriseName`,`v`.`virtualDataCenter`;
-
-#
-# Definition for the `MONTHLY_USAGE_SUM_VW` view : 
-#
-
-DROP VIEW IF EXISTS `MONTHLY_USAGE_SUM_VW`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `MONTHLY_USAGE_SUM_VW` AS 
-  select 
-    cast((`v`.`startTime` - interval (dayofmonth(`v`.`startTime`) - 1) day) as date) AS `startTime`,
-    last_day(`v`.`startTime`) AS `endTime`,
-    `v`.`idAccountingResourceType` AS `idAccountingResourceType`,
-    `v`.`resourceType` AS `resourceType`,
-    sum(`v`.`resourceUnits`) AS `resourceUnits`,
-    `v`.`idEnterprise` AS `idEnterprise`,
-    `v`.`idVirtualDataCenter` AS `idVirtualDataCenter`,
-    `v`.`enterpriseName` AS `enterpriseName`,
-    `v`.`virtualDataCenter` AS `virtualDataCenter` 
-  from 
-    `HOURLY_USAGE_MAX_VW` `v` 
-  group by 
-    `v`.`idAccountingResourceType`,`v`.`resourceType`,`v`.`idEnterprise`,`v`.`idVirtualDataCenter`,`v`.`enterpriseName`,`v`.`virtualDataCenter`;
-
-#
-# Data for the `chargeback_simple` table  (LIMIT 0,500)
-#
-
-# INSERT INTO `chargeback_simple` (`idAccountingResourceType`, `resourceType`, `costPerHour`) VALUES 
-#   (1,'cpu',0.03),
-#   (2,'ram',5E-5),
-#   (3,'hd',2.5E-11),
-#   (4,'externalstorage',5E-11),
-#   (5,'ipaddress',0.01);
-
-COMMIT;
-
---
--- ***********************************************************************************************************************
---
-
--- CRON Sample to Activate Accounting: 
--- WARNING : CHECK user/passwd config!
--- Runs every hour
--- 0 * * * * mysql -hlocalhost -P3306 -uroot -proot -e "CALL kinton.UpdateAccounting();"
-
--- Runs every Sunday at 12:00 and deletes records older than a week.
--- 0 12 * * 0 mysql -uroot -hlocalhost -P3306 -proot -e "CALL kinton.DeleteOldRegisteredEvents(168);"
--- or
--- Runs once a day at midnight
--- 0 0 * * * mysql -hlocalhost -P3306 -uroot  -proot -e "CALL kinton.DeleteOldRegisteredEvents(24);"
-
-
--- Runs periodically Accounting Events : Available for MySQL > 5.1
--- SET GLOBAL event_scheduler = ON;
--- DROP EVENT IF EXISTS update_accounting_event;
--- CREATE EVENT update_accounting_event ON SCHEDULE EVERY 1 HOUR
--- DO
--- CALL UpdateAccounting();
---
-
--- DROP EVENT IF EXISTS delete_old_registered_accounting_event;
--- CREATE EVENT delete_old_registered_accounting_event ON SCHEDULE EVERY 24 HOUR
--- DO
--- CALL DeleteOldRegisteredEvents(24);
-
--- or 
-
--- DROP EVENT IF EXISTS delete_old_registered_accounting_event;
--- CREATE EVENT delete_old_registered_accounting_event ON SCHEDULE EVERY 168 HOUR
--- DO
--- CALL DeleteOldRegisteredEvents(168);
--- 
-
-
