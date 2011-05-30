@@ -11,7 +11,7 @@ Source0:        server.war
 Source1:        abiquo.properties.server
 Source2:        abiquo-accounting.cron
 Source3:        kinton-schema.sql
-Source4:	kinton-delta-1_7_5-to-1_7_6.sql
+Source4:	kinton-delta-1_7_6-to-1_8_0.sql
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server 
 Requires:       /usr/sbin/sendmail /usr/bin/which
