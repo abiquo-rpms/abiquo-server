@@ -1,8 +1,8 @@
 %define abiquo_basedir /opt/abiquo
 
 Name:           abiquo-server
-Version:        1.7.6
-Release:        2%{?dist}%{?buildstamp}
+Version:        1.8
+Release:        0%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
