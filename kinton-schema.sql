@@ -1249,8 +1249,8 @@ INSERT INTO `kinton`.`system_properties` (`name`, `value`, `description`) VALUES
  ("client.dashboard.abiquoURL","http://www.abiquo.org","URL of Abiquo web page"),
  ("client.dashboard.allowUsersAccess","1","Allow (1) or deny (0) access to the \'Users\' section"),
  ("client.dashboard.showStartUpAlert","0","Set to 1 to show an Alert with the text found in Startup_Alert.txt file"),
- ("client.infra.googleMapsDefaultLatitude","41.3825","Google Maps will be centered by default at this longitude value"),
- ("client.infra.googleMapsDefaultLongitude","2.176944","Google Maps will be centered by default at this latitude value"),
+ ("client.infra.googleMapsDefaultLatitude","90","Google Maps will be centered by default at this longitude value"),
+ ("client.infra.googleMapsDefaultLongitude","42","Google Maps will be centered by default at this latitude value"),
  ("client.infra.googleMapsDefaultZoom","4","Google Maps will be centered by default with this zoom level value"),
  ("client.infra.googleMapskey","0","The map\'s Google key used in infrastructure section"),
  ("client.infra.googleMapsLadTimeOut","10","Time, in seconds, that applications waits Google Maps to load. After that, application considers that Google Maps service is temporarily unavailable, and is not used"),
@@ -1273,43 +1273,7 @@ INSERT INTO `kinton`.`system_properties` (`name`, `value`, `description`) VALUES
  ("client.infra.defaultHypervisorUser","root","Default Hypervisor user used when creating Physical Machines"),
  ("client.storage.volumeMaxSizeValues","1,2,4,8,16,32,64,128,256","Comma separated values, with the allowed sizes when creating or editing a VolumeManagement"),
  ("client.virtual.virtualImagesRefreshConversionsInterval","5","Time interval in seconds to refresh missing virtual image conversions"),
- ("client.main.enterpriseLogoURL","http://www.abiquo.com","URL displayed when the header enterprise logo is clicked"),
- ("client.wiki.showHelp","1","Show (1) or hide (0) the help icon within the plateform"), 
- ("client.wiki.showDefaultHelp","0","Use (1) or not (0) the default help URL within the plateform"), 
- ("client.wiki.defaultURL","http://community.abiquo.com/display/ABI17/Abiquo+Documentation+Home","The default URL opened when not specific help URL is specified"),
- ("client.wiki.infra.createDatacenter","http://community.abiquo.com/display/ABI17/Managing+Datacenters#ManagingDatacenters-CreatingaDatacenter","datacenter creation wiki"), 
- ("client.wiki.infra.editDatacenter","http://community.abiquo.com/display/ABI17/Managing+Datacenters#ManagingDatacenters-ModifyingaDatacenter","datacenter edition wiki"), 
- ("client.wiki.infra.editRemoteService","http://community.abiquo.com/display/ABI17/Managing+Datacenters#ManagingDatacenters-RemoteServices","remote service edition wiki"), 
- ("client.wiki.infra.createPhysicalMachine","http://community.abiquo.com/display/ABI17/Manage+Racks+and+Physical+Machines#ManageRacksandPhysicalMachines-CreatingPhysicalMachines","physical machine creation wiki"),
- ("client.wiki.infra.mailNotification","http://community.abiquo.com/display/ABI17/Manage+Racks+and+Physical+Machines#ManageRacksandPhysicalMachines-Sendingemailnotifications","mail notification wiki"),
- ("client.wiki.infra.addDatastore","http://community.abiquo.com/display/ABI17/Manage+Racks+and+Physical+Machines#ManageRacksandPhysicalMachines-Datastoresmanagement","Datastore manager wiki"),
- ("client.wiki.infra.createRack","http://community.abiquo.com/display/ABI17/Manage+Racks+and+Physical+Machines#ManageRacksandPhysicalMachines-CreatingRacks","rack creation wiki"),
- ("client.wiki.infra.createMultiplePhysicalMachine","http://community.abiquo.com/display/ABI17/Manage+Racks+and+Physical+Machines#ManageRacksandPhysicalMachines-Createmultiplesphysicalmachines.","multiple physical machine creation wiki"),
- ("client.wiki.network.publicVlan","http://community.abiquo.com/display/ABI17/Manage+Networking+Configuration#ManageNetworkingConfiguration-PublicVLANManagement","public vlan creation wiki"),
- ("client.wiki.storage.storageDevice","http://community.abiquo.com/display/ABI17/Manage+External+Storage+%281.7.5%29#ManageExternalStorage%281.7.5%29-StorageDevicemanagement","storage device creation wiki"),
- ("client.wiki.storage.storagePool","http://community.abiquo.com/display/ABI17/Manage+External+Storage+%281.7.5%29#ManageExternalStorage%281.7.5%29-StoragePoolmanagement","storage pool creation wiki"), 
- ("client.wiki.storage.tier","http://community.abiquo.com/display/ABI17/Manage+External+Storage+%281.7.5%29#ManageExternalStorage%281.7.5%29-TierManagement","tier edition wiki"),
- ("client.wiki.allocation.global","http://community.abiquo.com/display/ABI17/Manage+Allocation+Rules#ManageAllocationRules-Globalrulesmanagement","global rules wiki"),
- ("client.wiki.allocation.datacenter","http://community.abiquo.com/display/ABI17/Manage+Allocation+Rules#ManageAllocationRules-Datacenterrulesmanagement","datacenter rules wiki"),
- ("client.wiki.vdc.createVdc","http://community.abiquo.com/display/ABI17/Manage+Virtual+Datacenters#ManageVirtualDatacenters-CreatingaVirtualDatacenter","virtual datacenter creation wiki"),
- ("client.wiki.vdc.createVapp","http://community.abiquo.com/display/ABI17/Basic+operations#Basicoperations-CreatinganewVirtualAppliance","virtual app creation wiki"),
- ("client.wiki.vdc.createPrivateNetwork","http://community.abiquo.com/display/ABI17/Manage+Networks#ManageNetworks-PrivateIPaddresses","VDC private network creation wiki"),
- ("client.wiki.vdc.createPublicNetwork","http://community.abiquo.com/display/ABI17/Manage+Networks#ManageNetworks-PublicIPreservation","VDC public network creation wiki"),
- ("client.wiki.vdc.createVolume","http://community.abiquo.com/display/ABI17/Manage+Virtual+Storage#ManageVirtualStorage-CreatingaVolume","VDC virtual volume creation wiki"),
- ("client.wiki.vm.editVirtualMachine","http://community.abiquo.com/display/ABI17/Configure+Virtual+Machines","Virtual Machine edition wiki"),
- ("client.wiki.vm.bundleVirtualMachine","http://community.abiquo.com/display/ABI17/Configure+a+Virtual+Appliance#ConfigureaVirtualAppliance-Configure","Bundles VM wiki"),
- ("client.wiki.vm.createNetworkInterface","http://community.abiquo.com/display/ABI17/Configure+Virtual+Machines#ConfigureVirtualMachines-CreatinganewNetworkInterface","Network Interface creation wiki"),
- ("client.wiki.vm.createInstance","http://community.abiquo.com/display/ABI17/Create+Virtual+Machine+instances","Virtual Machine instance creation wiki"),
- ("client.wiki.vm.createStateful","http://community.abiquo.com/display/ABI17/Create+Stateful+Virtual+Machines","Virtual Machine stateful creation wiki"),
- ("client.wiki.vm.captureVirtualMachine","http://community.abiquo.com/display/ABI17/Manage+Racks+and+Physical+Machines#ManageRacksandPhysicalMachines-Importaretrievedmachine.","Capture Virtual Machine wiki"),
- ("client.wiki.apps.uploadVM","http://community.abiquo.com/display/ABI17/Adding+virtual+images+into+the+repository#Addingvirtualimagesintotherepository-Uploadingfromourlocalfilesystem","Virtual Image upload wiki"),
- ("client.wiki.user.createEnterprise","http://community.abiquo.com/display/ABI17/Manage+Enterprises#ManageEnterprises-CreatingoreditinganEnterprise","Enterprise creation wiki"),
- ("client.wiki.user.dataCenterLimits","http://community.abiquo.com/display/ABI17/Manage+Enterprises#ManageEnterprises-Datacenters","Datacenter Limits wiki"),
- ("client.wiki.user.createUser","http://community.abiquo.com/display/ABI17/Manage+Users#ManageUsers-Creatingoreditinganuser","User creation wiki"),
- ("client.wiki.config.general","http://community.abiquo.com/display/ABI17/Configuration+view","Configuration wiki"),
- ("client.wiki.config.heartbeat","http://community.abiquo.com/display/ABI17/Configuration+view#Configurationview-Heartbeating","Heartbeat configuration wiki"),
- ("client.wiki.config.licence","http://community.abiquo.com/display/ABI17/Configuration+view#Configurationview-Licensemanagement","Licence configuration wiki"),
- ("client.wiki.config.registration","http://community.abiquo.com/display/ABI17/Configuration+view#Configurationview-ProductRegistration","Registration wiki");
+ ("client.main.enterpriseLogoURL","http://www.abiquo.com","URL displayed when the header enterprise logo is clicked");
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `system_properties` ENABLE KEYS */;
 
@@ -2377,10 +2341,8 @@ CREATE TRIGGER `kinton`.`update_virtualmachine_update_stats` AFTER UPDATE ON `ki
         END IF;
         -- Register Accounting Events
         IF EXISTS( SELECT * FROM `information_schema`.ROUTINES WHERE ROUTINE_SCHEMA='kinton' AND ROUTINE_TYPE='PROCEDURE' AND ROUTINE_NAME='AccountingVMRegisterEvents' ) THEN
-       		 IF EXISTS(SELECT * FROM virtualimage vi WHERE vi.idImage=NEW.idImage AND vi.idRepository IS NOT NULL) THEN CALL AccountingVMRegisterEvents(NEW.idVM, NEW.idType, OLD.state, NEW.state, NEW.ram, NEW.cpu, NEW.hd);
-        
-       		 END IF;          
-       	END IF;	 
+            CALL AccountingVMRegisterEvents(NEW.idVM, NEW.idType, OLD.state, NEW.state, NEW.ram, NEW.cpu, NEW.hd);
+        END IF;              
     END IF;
     END;
 --
@@ -3980,3 +3942,719 @@ CREATE TABLE `tasks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CALL `kinton`.`add_version_column_to_all`();
+USE kinton;
+--
+-- ACCOUNTING SCRIPTS
+--
+
+--
+-- ACCOUNTING SCHEMA
+-- remove 'accounting' path when calling this script
+--
+
+DROP TABLE IF EXISTS `kinton`.`accounting_event_vm`;
+DROP TABLE IF EXISTS `kinton`.`accounting_event_storage`;
+DROP TABLE IF EXISTS `kinton`.`accounting_event_ips`;
+DROP TABLE IF EXISTS `kinton`.`accounting_event_vlan`;
+DROP TABLE IF EXISTS `kinton`.`accounting_event_detail`;
+
+-- Events for VM
+CREATE TABLE `kinton`.`accounting_event_vm` (
+  `idVMAccountingEvent` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `idVM` INTEGER(10) UNSIGNED NOT NULL,
+  `idEnterprise` INTEGER(10) UNSIGNED NOT NULL,
+  `idVirtualDataCenter` INTEGER(10) UNSIGNED NOT NULL,
+  `idVirtualApp` INTEGER(10) UNSIGNED NOT NULL,
+  `cpu` INTEGER(10) UNSIGNED NOT NULL,
+  `ram` INTEGER(10) UNSIGNED NOT NULL,
+  `hd` BIGINT(20) UNSIGNED NOT NULL,
+  `startTime` TIMESTAMP NULL,
+  `stopTime` TIMESTAMP NULL,
+  `consolidated` BOOLEAN NOT NULL default 0,
+  `version_c` int(11) DEFAULT '0',
+   PRIMARY KEY (`idVMAccountingEvent`)
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
+
+-- Events for Storage
+CREATE TABLE `kinton`.`accounting_event_storage` (
+  `idStorageAccountingEvent` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `idResource` VARCHAR(50) DEFAULT NULL,
+  `resourceName` VARCHAR(511) DEFAULT NULL,
+  -- idManagement is necessary?
+  `idVM` INTEGER(10) unsigned NULL,
+  `idEnterprise` INTEGER(10) UNSIGNED NOT NULL,
+  `idVirtualDataCenter` INTEGER(10) UNSIGNED NOT NULL,
+  `idVirtualApp` INTEGER(10) UNSIGNED NULL,
+  `sizeReserved` BIGINT UNSIGNED NOT NULL, -- SELECT limitResource INTO limitResourceObj FROM rasd r
+  `startTime` TIMESTAMP NULL,
+  `stopTime` TIMESTAMP NULL,
+  `consolidated` BOOLEAN NOT NULL default 0,
+  `version_c` int(11) DEFAULT '0',
+   PRIMARY KEY (`idStorageAccountingEvent`)
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
+
+-- Events for IPs Reserved
+CREATE TABLE `kinton`.`accounting_event_ips` (
+  `idIPsAccountingEvent` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  -- `idResource` INTEGER(10) UNSIGNED NOT NULL, no idResource if IP is not assigned to a VM
+  `idManagement`  INTEGER(10) UNSIGNED NOT NULL,
+  -- `idVM` INTEGER(10) unsigned NOT NULL,
+  `idEnterprise` INTEGER(10) UNSIGNED NOT NULL,
+  `idVirtualDataCenter` INTEGER(10) UNSIGNED NOT NULL,
+  -- `idVirtualApp` INTEGER(10) UNSIGNED NULL,
+  `ip` VARCHAR(20) NOT NULL,
+  `startTime` TIMESTAMP NULL,
+  `stopTime` TIMESTAMP NULL,
+  `consolidated` BOOLEAN NOT NULL default 0,
+  `version_c` int(11) DEFAULT '0',
+   PRIMARY KEY (`idIPsAccountingEvent`)
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8 ;
+
+-- Events for VLANs created
+CREATE TABLE `kinton`.`accounting_event_vlan` (
+  `idVLANAccountingEvent` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `vlan_network_id` INT(11) UNSIGNED NOT NULL,
+  -- `network_id` INT(11) UNSIGNED NOT NULL,
+  `idEnterprise` INTEGER(10) UNSIGNED NOT NULL,
+  `idVirtualDataCenter` INTEGER(10) UNSIGNED NOT NULL,
+  `network_name` VARCHAR(40) NOT NULL,
+  `startTime` TIMESTAMP NULL,
+  `stopTime` TIMESTAMP NULL,
+  `consolidated` BOOLEAN NOT NULL default 0,
+  `version_c` int(11) DEFAULT '0',
+   PRIMARY KEY (`idVLANAccountingEvent`)
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8 ;
+
+-- Consolidated data
+CREATE TABLE `kinton`.`accounting_event_detail` (
+  `idAccountingEvent` BIGINT(20) NOT NULL AUTO_INCREMENT,
+  `startTime` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `endTime` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `idAccountingResourceType` TINYINT(4) NOT NULL COMMENT '1 - VirtualMachine-vcpu; 2 - VirtualMachine-vram; 3 - VirtualMachine-vhd; 4 - ExternalStorage; 5 - IPAddress;', 
+  `resourceType` VARCHAR(255)  NOT NULL,
+  `resourceUnits` BIGINT(20) NOT NULL,
+  `resourceName` VARCHAR(511)  NOT NULL,
+  `idEnterprise` INTEGER(11) UNSIGNED NOT NULL,
+  `idVirtualDataCenter` INTEGER(11) UNSIGNED NOT NULL,
+  `idVirtualApp` INTEGER(11) UNSIGNED,
+  `idVirtualMachine` INTEGER(11) UNSIGNED,
+  `enterpriseName` VARCHAR(255)  NOT NULL,
+  `virtualDataCenter` VARCHAR(255)  NOT NULL,
+  `virtualApp` VARCHAR(255) ,
+  `virtualMachine` VARCHAR(255) ,
+  `version_c` int(11) DEFAULT '0',
+  PRIMARY KEY (`idAccountingEvent`)
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
+
+
+DROP VIEW IF EXISTS LAST_HOUR_USAGE_VM_VW;
+DROP VIEW IF EXISTS LAST_HOUR_USAGE_STORAGE_VW;
+DROP VIEW IF EXISTS LAST_HOUR_USAGE_IPS_VW;
+DROP VIEW IF EXISTS LAST_HOUR_USAGE_VLAN_VW;
+
+-- VIEW to calculate Event_Detail for VM Accounting
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `LAST_HOUR_USAGE_VM_VW` AS 
+  select 
+    `accounting_event_vm`.idVMAccountingEvent AS idVMAccountingEvent,
+    `accounting_event_vm`.idVM AS idVM,
+    `accounting_event_vm`.idEnterprise AS idEnterprise,
+    `accounting_event_vm`.idVirtualDataCenter AS idVirtualDataCenter,
+    `accounting_event_vm`.idVirtualApp AS idVirtualApp,
+    `accounting_event_vm`.cpu AS cpu,
+    `accounting_event_vm`.ram AS ram,
+    `accounting_event_vm`.hd AS hd,
+    `accounting_event_vm`.startTime AS startTime,
+    `accounting_event_vm`.stopTime AS stopTime,
+    (unix_timestamp(`accounting_event_vm`.stopTime) - unix_timestamp(`accounting_event_vm`.startTime)) AS `DELTA_TIME`,
+    from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600))) AS `ROUNDED_HOUR`,
+    CONCAT(IF (`virtualmachine`.`description` IS NULL, '', `virtualmachine`.`description`),' - ', `virtualmachine`.`name`) AS `VIRTUAL_MACHINE`,
+    `virtualapp`.`name` AS `VIRTUAL_APP`,
+    `virtualdatacenter`.`name` AS `VIRTUAL_DATACENTER`,
+    `enterprise`.`name` AS `VIRTUAL_ENTERPRISE` 
+  from 
+    ((((`accounting_event_vm` join `virtualmachine` on((`accounting_event_vm`.idVM = `virtualmachine`.`idVM`))) join `virtualapp` on((`accounting_event_vm`.idVirtualApp = `virtualapp`.`idVirtualApp`))) join `virtualdatacenter` on((`accounting_event_vm`.idVirtualDataCenter = `virtualdatacenter`.`idVirtualDataCenter`))) join `enterprise` on((`accounting_event_vm`.idEnterprise = `enterprise`.`idEnterprise`))) 
+  where 
+    -- Machine is still ON
+    ((`accounting_event_vm`.stopTime is null)
+    -- Machine was ON for less than 60 seconds
+    or ((`accounting_event_vm`.stopTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_vm`.stopTime) - unix_timestamp(`accounting_event_vm`.startTime)) > 3600)) or ((`accounting_event_vm`.startTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_vm`.stopTime) - unix_timestamp(`accounting_event_vm`.startTime)) <= 3600)));
+
+-- VIEW to calculate Event_Detail for Storage Accounting
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `LAST_HOUR_USAGE_STORAGE_VW` AS 
+select 
+    `accounting_event_storage`.idStorageAccountingEvent AS idStorageAccountingEvent,
+    `accounting_event_storage`.idVM AS idVM,
+    `accounting_event_storage`.idEnterprise AS idEnterprise,
+    `accounting_event_storage`.idVirtualDataCenter AS idVirtualDataCenter,
+    `accounting_event_storage`.idVirtualApp AS idVirtualApp,
+    `accounting_event_storage`.idResource AS idResource,
+    `accounting_event_storage`.resourceName AS resourceName,
+    `accounting_event_storage`.sizeReserved AS sizeReserved,    
+    `accounting_event_storage`.startTime AS startTime,
+    `accounting_event_storage`.stopTime AS stopTime,
+    (unix_timestamp(`accounting_event_storage`.stopTime) - unix_timestamp(`accounting_event_storage`.startTime)) AS `DELTA_TIME`,
+    from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600))) AS `ROUNDED_HOUR`,
+    -- `virtualmachine`.`name` AS `VIRTUAL_MACHINE`,
+    -- `virtualapp`.`name` AS `VIRTUAL_APP`,
+    `virtualdatacenter`.`name` AS `VIRTUAL_DATACENTER`,
+    `enterprise`.`name` AS `VIRTUAL_ENTERPRISE` 
+  from 
+    (((`accounting_event_storage` join `virtualdatacenter` on(`accounting_event_storage`.idVirtualDataCenter = `virtualdatacenter`.`idVirtualDataCenter`))
+    join `enterprise` on(`accounting_event_storage`.idEnterprise = `enterprise`.`idEnterprise`))) 
+  where 
+    -- Storage volume is still ON
+    ((`accounting_event_storage`.stopTime is null)
+    -- Storage volume was ON for less than 60 seconds
+    or ((`accounting_event_storage`.stopTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_storage`.stopTime) - unix_timestamp(`accounting_event_storage`.startTime)) > 3600)) or ((`accounting_event_storage`.startTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_storage`.stopTime) - unix_timestamp(`accounting_event_storage`.startTime)) <= 3600)));
+
+-- VIEW to calculate Event_Detail for IPs Accounting
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `LAST_HOUR_USAGE_IPS_VW` AS 
+select 
+    `accounting_event_ips`.idIPsAccountingEvent AS idIPsAccountingEvent,
+    `accounting_event_ips`.idEnterprise AS idEnterprise,
+    `accounting_event_ips`.idVirtualDataCenter AS idVirtualDataCenter,
+    `accounting_event_ips`.ip AS ip,    
+    `accounting_event_ips`.startTime AS startTime,
+    `accounting_event_ips`.stopTime AS stopTime,
+    (unix_timestamp(`accounting_event_ips`.stopTime) - unix_timestamp(`accounting_event_ips`.startTime)) AS `DELTA_TIME`,
+    from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600))) AS `ROUNDED_HOUR`,
+    -- `virtualmachine`.`name` AS `VIRTUAL_MACHINE`,
+    -- `virtualapp`.`name` AS `VIRTUAL_APP`,
+    `virtualdatacenter`.`name` AS `VIRTUAL_DATACENTER`,
+    `enterprise`.`name` AS `VIRTUAL_ENTERPRISE` 
+  from 
+    (((`accounting_event_ips` join `virtualdatacenter` on(`accounting_event_ips`.idVirtualDataCenter = `virtualdatacenter`.`idVirtualDataCenter`))
+    join `enterprise` on(`accounting_event_ips`.idEnterprise = `enterprise`.`idEnterprise`))) 
+  where 
+    -- IP is still Reserved
+    ((`accounting_event_ips`.stopTime is null)
+    -- IP was reserved for less than 60 seconds
+    or ((`accounting_event_ips`.stopTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_ips`.stopTime) - unix_timestamp(`accounting_event_ips`.startTime)) > 3600)) or ((`accounting_event_ips`.startTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_ips`.stopTime) - unix_timestamp(`accounting_event_ips`.startTime)) <= 3600)));
+
+
+    -- VIEW to calculate Event_Detail for VLAN Accounting
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `LAST_HOUR_USAGE_VLAN_VW` AS 
+select 
+    `accounting_event_vlan`.idVLANAccountingEvent AS idVLANAccountingEvent,
+    `accounting_event_vlan`.idEnterprise AS idEnterprise,
+    `accounting_event_vlan`.idVirtualDataCenter AS idVirtualDataCenter,
+    `accounting_event_vlan`.network_name AS networkName,    
+    `accounting_event_vlan`.startTime AS startTime,
+    `accounting_event_vlan`.stopTime AS stopTime,
+    (unix_timestamp(`accounting_event_vlan`.stopTime) - unix_timestamp(`accounting_event_vlan`.startTime)) AS `DELTA_TIME`,
+    from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600))) AS `ROUNDED_HOUR`,
+    `virtualdatacenter`.`name` AS `VIRTUAL_DATACENTER`,
+    `enterprise`.`name` AS `VIRTUAL_ENTERPRISE` 
+  from 
+    (((`accounting_event_vlan` join `virtualdatacenter` on(`accounting_event_vlan`.idVirtualDataCenter = `virtualdatacenter`.`idVirtualDataCenter`))
+    join `enterprise` on(`accounting_event_vlan`.idEnterprise = `enterprise`.`idEnterprise`))) 
+  where 
+    -- IP is still Reserved
+    ((`accounting_event_vlan`.stopTime is null)
+    -- IP was reserved for less than 60 seconds
+    or ((`accounting_event_vlan`.stopTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_vlan`.stopTime) - unix_timestamp(`accounting_event_vlan`.startTime)) > 3600)) or ((`accounting_event_vlan`.startTime > from_unixtime((-(3600) + (truncate((unix_timestamp(now()) / 3600),0) * 3600)))) and ((unix_timestamp(`accounting_event_vlan`.stopTime) - unix_timestamp(`accounting_event_vlan`.startTime)) <= 3600)));
+    
+-- Only for debugging at development stage
+-- DROP  TABLE IF EXISTS `kinton`.`debug_msg`;
+-- CREATE TABLE `kinton`.`debug_msg` (
+--   `msg` varchar(255) NOT NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
+-- INSERT INTO debug_msg (msg) VALUES (CONCAT('Trigger Activated: ',idVirtualMachine,'-',idType,'-',oldState,'-',newState,'-', ramValue,'-',cpuValue,'-',hdValue));
+
+--
+-- ***********************************************************************************************************************
+--
+
+--
+-- ACCOUNTING PROCEDURES
+--    
+
+DROP PROCEDURE IF EXISTS `kinton`.`AccountingVMRegisterEvents`;
+DROP PROCEDURE IF EXISTS `kinton`.`AccountingStorageRegisterEvents`;
+DROP PROCEDURE IF EXISTS `kinton`.`AccountingIPsRegisterEvents`;
+DROP PROCEDURE IF EXISTS `kinton`.`AccountingVLANRegisterEvents`;
+DROP PROCEDURE IF EXISTS `kinton`.`UpdateAccounting`;
+
+
+DELIMITER |
+-- 
+-- AccountingVMRegisterEvents: Registers Events related to DEPLOY or UNDEPLOY virtualmachines for Accounting
+-- Inserts new rows with startTime=NOW() for each new DEPLOY_VM event
+-- Updates existing rows with stopTime=NOW() for each new UNDEPLOY_VM event
+-- 
+CREATE PROCEDURE `kinton`.AccountingVMRegisterEvents(
+    IN idVirtualMachine INT(10) UNSIGNED, 
+    IN idType INT(1) UNSIGNED, 
+    IN oldState VARCHAR(50), 
+    IN newState VARCHAR(50), 
+    IN ramValue INT(7) unsigned,  
+    IN cpuValue INT(10) unsigned,
+    IN hdValue BIGINT(20) unsigned)
+BEGIN
+    IF idType = 1 AND (oldState != newState) AND (newState = "RUNNING") THEN
+    -- Deploy Event Detected
+        INSERT INTO accounting_event_vm (idVM,idEnterprise,idVirtualDataCenter,idVirtualApp,cpu,ram,hd,startTime,stopTime) 
+        SELECT
+            vm.idVM, vapp.idEnterprise, vapp.idVirtualDataCenter, n.idVirtualApp,  
+            cpuValue,
+            ramValue,           
+            hdValue,
+            now(),
+            null
+          FROM nodevirtualimage nvi, node n, virtualapp vapp, virtualmachine vm
+        WHERE vm.idVM = nvi.idVM
+        AND nvi.idNode = n.idNode
+        AND vapp.idVirtualApp = n.idVirtualApp
+        AND vm.idVM = idVirtualMachine;
+    END IF;
+    --  
+    IF idType = 1 AND (newState = "NOT_DEPLOYED" OR newState = "UNKNOWN" OR (newState = "CRASHED" AND oldState != "UNKNOWN")) THEN          
+    -- Undeploy Event Detected
+        UPDATE
+          accounting_event_vm
+        SET
+          stopTime=now()
+        WHERE
+          accounting_event_vm.idVM = idVirtualMachine
+          and
+          accounting_event_vm.stopTime is null;
+    END IF;
+END;
+|
+-- 
+-- AccountingStorageRegisterEvents
+--
+-- Triggered when user creates, updates or deletes a volume in a VirtualDataCenter. All this events are stored in 'accounting_event_storage' with its timestamps.
+-- This procedure performs different actions managed by 'action' parameter values:'CREATE_STORAGE','UPDATE_STORAGE','
+-- 
+CREATE PROCEDURE `kinton`.AccountingStorageRegisterEvents(
+    IN action VARCHAR(15),
+    IN idThisResource VARCHAR(50),
+    IN thisResourceName VARCHAR(255),
+    IN idThisVirtualDataCenter INT(10) UNSIGNED,
+    IN idThisEnterprise INT(10) UNSIGNED,  
+    IN sizeReserved BIGINT(20))
+BEGIN   
+    -- Storage Creation Event Detected (table rasd_management). Storage is converted to Bytes
+    IF action = "CREATE_STORAGE" THEN
+        INSERT INTO accounting_event_storage (idResource, resourceName, idVM,idEnterprise,idVirtualDataCenter,idVirtualApp,sizeReserved,startTime, stopTime)
+        SELECT idThisResource, thisResourceName, null, idThisEnterprise, idThisVirtualDataCenter, null, sizeReserved * 1048576, now(), null; 
+    END IF;
+    -- Storage Delete Event Detected (table rasd_management)
+    IF action = "DELETE_STORAGE" THEN   
+        UPDATE
+          accounting_event_storage
+        SET
+          stopTime=now()
+        WHERE
+          accounting_event_storage.idResource = idThisResource
+          AND
+          accounting_event_storage.stopTime is null;
+    END IF;
+    -- Storage Update Event Detected: update and insert a new one (table rasd)
+    IF action = "UPDATE_STORAGE" THEN   
+        UPDATE
+          accounting_event_storage
+        SET
+          stopTime=now()
+        WHERE
+          accounting_event_storage.idResource = idThisResource
+          AND
+          accounting_event_storage.stopTime is null;
+        INSERT INTO accounting_event_storage (idResource, resourceName, idVM,idEnterprise,idVirtualDataCenter,idVirtualApp,sizeReserved,startTime, stopTime)
+            SELECT idThisResource,thisResourceName, null, idThisEnterprise, idThisVirtualDataCenter, null, sizeReserved * 1048576, now(), null; 
+    END IF;
+END;
+|
+-- 
+-- AccountingIPsRegisterEvents
+--
+-- Triggered when user creates, updates or deletes a volume in a VirtualDataCenter. All this events are stored in 'accounting_event_storage' with its timestamps.
+-- This procedure performs different actions managed by 'action' parameter values:'CREATE_STORAGE','UPDATE_STORAGE','
+-- 
+CREATE PROCEDURE `kinton`.AccountingIPsRegisterEvents(
+    IN action VARCHAR(15),
+    IN idManagement INT(10) UNSIGNED,
+    IN ipAddress VARCHAR(20),
+    IN idThisVirtualDataCenter INT(10) UNSIGNED,
+    IN idThisEnterprise INT(10) UNSIGNED)
+BEGIN   
+    --  
+    -- IP Reserved Event Detected (table ip_pool_management)
+    IF action = "IP_RESERVED" THEN
+        INSERT INTO accounting_event_ips (idManagement,idEnterprise,idVirtualDataCenter,ip,startTime,stopTime)
+        SELECT idManagement, idThisEnterprise, idThisVirtualDataCenter, ipAddress, now(), null; 
+    END IF;
+    -- IP Freed Event Detected (table rasd_management)
+    IF action = "IP_FREED" THEN 
+        UPDATE
+          accounting_event_ips
+        SET
+          stopTime=now()
+        WHERE
+          accounting_event_ips.idManagement = idManagement
+          AND
+          accounting_event_ips.stopTime is null;
+    END IF; 
+END;
+|
+-- 
+-- AccountingVLANRegisterEvents
+--
+-- Triggered when user creates or deletes a VLAN in a VirtualDataCenter. All this events are stored in 'accounting_event_vlan' with its timestamps.
+-- This procedure performs different actions managed by 'action' parameter values:'CREATE_VLAN','DELETE_VLAN','
+-- 
+CREATE PROCEDURE `kinton`.AccountingVLANRegisterEvents(
+    IN action VARCHAR(15),
+    IN vlan_network_id INT(11) UNSIGNED,
+    IN network_name VARCHAR(40),
+    IN idThisVirtualDataCenter INT(10) UNSIGNED,
+    IN idThisEnterprise INT(10) UNSIGNED)
+BEGIN   
+    -- INSERT INTO debug_msg (msg) VALUES (CONCAT('PROCEDURE AccountingVLANRegisterEvents Activated: ',IFNULL(vlan_network_id,'NULL'),'-',IFNULL(network_name,'NULL'),'-',IFNULL(idThisVirtualDataCenter,'NULL'),'-',idThisEnterprise,'-',action,'-',now()));   
+    --  
+    -- VLAN Created Event Detected
+    IF action = "CREATE_VLAN" THEN
+        INSERT INTO accounting_event_vlan (vlan_network_id,idEnterprise,idVirtualDataCenter,network_name,startTime,stopTime) 
+        SELECT vlan_network_id, idThisEnterprise, idThisVirtualDataCenter, network_name, now(), null; 
+    END IF;
+    -- VLAN Deleted Event Detected
+    IF action = "DELETE_VLAN" THEN  
+        UPDATE
+          accounting_event_vlan
+        SET
+          stopTime=now()
+        WHERE
+          accounting_event_vlan.vlan_network_id = vlan_network_id
+          AND
+          accounting_event_vlan.stopTime is null;
+    END IF; 
+END;
+|
+-- 
+-- UpdateAccounting
+--
+-- Inserts rows at accounting_event_detail based on Views defined for VMs, Storage and IPs events
+-- 
+CREATE PROCEDURE `kinton`.`UpdateAccounting`()
+    NOT DETERMINISTIC
+    SQL SECURITY DEFINER
+    COMMENT ''
+BEGIN
+-- For VM Resources Accounting
+INSERT INTO accounting_event_detail(
+  `startTime`,
+  `endTime`, 
+  `idAccountingResourceType`,
+  `resourceType`,
+  `resourceUnits`,
+  `resourceName`, 
+  `idEnterprise`, 
+  `idVirtualDataCenter`, 
+  `idVirtualApp`, 
+  `idVirtualMachine`, 
+  `enterpriseName`, 
+  `virtualDataCenter`, 
+  `virtualApp`, 
+  `virtualMachine`)
+SELECT DISTINCT
+      T.`ROUNDED_HOUR`,
+      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
+      1,
+      'VirtualMachine-vcpu',
+      T.cpu,
+      T.`VIRTUAL_MACHINE`,
+      T.`idEnterprise`,
+      T.`idVirtualDataCenter`,
+      T.`idVirtualApp`,
+      T.`idVM`,
+      T.`VIRTUAL_ENTERPRISE`,
+      T.`VIRTUAL_DATACENTER`,
+      T.`VIRTUAL_APP`,
+      T.`VIRTUAL_MACHINE`
+FROM `LAST_HOUR_USAGE_VM_VW` T
+UNION ALL
+SELECT DISTINCT
+      T.`ROUNDED_HOUR`,
+      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
+      2,
+      'VirtualMachine-vram',
+      T.`ram`,
+      T.`VIRTUAL_MACHINE`,
+      T.`idEnterprise`,
+      T.`idVirtualDataCenter`,
+      T.`idVirtualApp`,
+      T.`idVM`,
+      T.`VIRTUAL_ENTERPRISE`,
+      T.`VIRTUAL_DATACENTER`,
+      T.`VIRTUAL_APP`,
+      T.`VIRTUAL_MACHINE`
+FROM `LAST_HOUR_USAGE_VM_VW` T
+UNION ALL
+SELECT DISTINCT
+      T.`ROUNDED_HOUR`,
+      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
+      3,
+      'VirtualMachine-vhd',
+      T.`hd`,
+      T.`VIRTUAL_MACHINE`,
+      T.`idEnterprise`,
+      T.`idVirtualDataCenter`,
+      T.`idVirtualApp`,
+      T.`idVM`,
+      T.`VIRTUAL_ENTERPRISE`,
+      T.`VIRTUAL_DATACENTER`,
+      T.`VIRTUAL_APP`,
+      T.`VIRTUAL_MACHINE`
+FROM `LAST_HOUR_USAGE_VM_VW` T
+-- Storage
+UNION ALL
+SELECT DISTINCT
+      T.`ROUNDED_HOUR`,
+      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
+      4,
+      'ExternalStorage',
+      T.`sizeReserved`,
+      CONCAT(IF (T.`resourceName` IS NULL, '', T.`resourceName`), ' - ', T.`idResource`),
+      T.`idEnterprise`,
+      T.`idVirtualDataCenter`,
+      '',
+      NULL, -- T.`idVM`,
+      T.`VIRTUAL_ENTERPRISE`,
+      T.`VIRTUAL_DATACENTER`,
+      '',
+      ''      
+FROM `LAST_HOUR_USAGE_STORAGE_VW` T
+-- IPs
+UNION ALL
+SELECT DISTINCT
+      T.`ROUNDED_HOUR`,
+      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
+      5,
+      'IPAddress',
+      1,
+      T.`ip`,
+      T.`idEnterprise`,
+      T.`idVirtualDataCenter`,
+      '',
+      NULL, -- idVM,
+      T.`VIRTUAL_ENTERPRISE`,
+      T.`VIRTUAL_DATACENTER`,
+      '',
+      ''      
+FROM `LAST_HOUR_USAGE_IPS_VW` T
+-- VLANs
+UNION ALL
+SELECT DISTINCT
+      T.`ROUNDED_HOUR`,
+      from_unixtime(3600 + unix_timestamp(T.`ROUNDED_HOUR`)),
+      6,
+      'VLAN',
+      1,
+      T.`networkName`,
+      T.`idEnterprise`,
+      T.`idVirtualDataCenter`,
+      '',
+      NULL, -- idVM,
+      T.`VIRTUAL_ENTERPRISE`,
+      T.`VIRTUAL_DATACENTER`,
+      '',
+      ''      
+FROM `LAST_HOUR_USAGE_VLAN_VW` T;
+END;
+|
+-- 
+-- DeleteOldRegisteredEvents
+--
+-- Auxiliar procedure to delete old rows from event registering tables
+-- All events registered older than 'hours' parameter from now will be deleted
+-- 
+DROP PROCEDURE IF EXISTS `kinton`.DeleteOldRegisteredEvents;
+CREATE PROCEDURE `kinton`.DeleteOldRegisteredEvents(    
+IN hours INT(2) UNSIGNED)
+BEGIN   
+    DELETE FROM accounting_event_vm  WHERE stopTime < date_sub(NOW(), INTERVAL hours HOUR);
+    DELETE FROM accounting_event_storage  WHERE stopTime < date_sub(NOW(), INTERVAL hours HOUR);
+    DELETE FROM accounting_event_ips  WHERE stopTime < date_sub(NOW(), INTERVAL hours HOUR);
+    DELETE FROM accounting_event_vlan  WHERE stopTime < date_sub(NOW(), INTERVAL hours HOUR);
+END;
+|
+DELIMITER ;
+--
+-- ***********************************************************************************************************************
+--
+  
+--
+-- ACCOUNTING ADDITIONAL SQL VIEWS
+--
+# SQL Manager 2005 for MySQL 3.7.0.1
+# ---------------------------------------
+# Host     : 10.60.1.80
+# Port     : 3306
+# Database : kinton
+
+USE kinton;
+
+SET FOREIGN_KEY_CHECKS=0;
+
+#
+# Structure for the `chargeback_simple` table : 
+#
+
+DROP TABLE IF EXISTS `chargeback_simple`;
+
+CREATE TABLE `chargeback_simple` (
+  `idAccountingResourceType` tinyint(4) NOT NULL,
+  `resourceType` varchar(20) NOT NULL,
+  `costPerHour` decimal(15,12) NOT NULL,
+  `version_c` int(11) DEFAULT '0',
+  PRIMARY KEY  (`idAccountingResourceType`),
+  UNIQUE KEY `idAccountingResourceType` (`idAccountingResourceType`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+#
+# Definition for the `HOURLY_USAGE_MAX_VW` view : 
+#
+
+DROP VIEW IF EXISTS `HOURLY_USAGE_MAX_VW`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `HOURLY_USAGE_MAX_VW` AS 
+  select 
+    `accounting_event_detail`.`startTime` AS `startTime`,
+    `accounting_event_detail`.`endTime` AS `endTime`,
+    `accounting_event_detail`.`idAccountingResourceType` AS `idAccountingResourceType`,
+    `accounting_event_detail`.`resourceType` AS `resourceType`,
+    `accounting_event_detail`.`resourceName` AS `resourceName`,
+    max(`accounting_event_detail`.`resourceUnits`) AS `resourceUnits`,
+    `accounting_event_detail`.`idEnterprise` AS `idEnterprise`,
+    `accounting_event_detail`.`idVirtualDataCenter` AS `idVirtualDataCenter`,
+    `accounting_event_detail`.`idVirtualApp` AS `idVirtualApp`,
+    `accounting_event_detail`.`idVirtualMachine` AS `idVirtualMachine`,
+    `accounting_event_detail`.`enterpriseName` AS `enterpriseName`,
+    `accounting_event_detail`.`virtualDataCenter` AS `virtualDataCenter`,
+    `accounting_event_detail`.`virtualApp` AS `virtualApp`,
+    `accounting_event_detail`.`virtualMachine` AS `virtualMachine` 
+  from 
+    `accounting_event_detail` 
+  group by 
+    `accounting_event_detail`.`startTime`,`accounting_event_detail`.`endTime`,`accounting_event_detail`.`idAccountingResourceType`,`accounting_event_detail`.`resourceType`,`accounting_event_detail`.`resourceName`,`accounting_event_detail`.`idEnterprise`,`accounting_event_detail`.`idVirtualDataCenter`,`accounting_event_detail`.`idVirtualApp`,`accounting_event_detail`.`idVirtualMachine`,`accounting_event_detail`.`enterpriseName`,`accounting_event_detail`.`virtualDataCenter`,`accounting_event_detail`.`virtualApp`,`accounting_event_detail`.`virtualMachine`;
+
+
+#
+# Definition for the `DAILY_USAGE_SUM_VW` view : 
+#
+
+DROP VIEW IF EXISTS `DAILY_USAGE_SUM_VW`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `DAILY_USAGE_SUM_VW` AS 
+  select 
+    cast(`v`.`startTime` as date) AS `startTime`,
+    cast(`v`.`startTime` as date) AS `endTime`,
+    `v`.`idAccountingResourceType` AS `idAccountingResourceType`,
+    `v`.`resourceType` AS `resourceType`,
+    sum(`v`.`resourceUnits`) AS `resourceUnits`,
+    `v`.`idEnterprise` AS `idEnterprise`,
+    `v`.`idVirtualDataCenter` AS `idVirtualDataCenter`,
+    `v`.`enterpriseName` AS `enterpriseName`,
+    `v`.`virtualDataCenter` AS `virtualDataCenter` 
+  from 
+    `HOURLY_USAGE_MAX_VW` `v` 
+  group by 
+    `v`.`idAccountingResourceType`,`v`.`resourceType`,`v`.`idEnterprise`,`v`.`idVirtualDataCenter`,`v`.`enterpriseName`,`v`.`virtualDataCenter`;
+
+#
+# Definition for the `HOURLY_USAGE_SUM_VW` view : 
+#
+
+DROP VIEW IF EXISTS `HOURLY_USAGE_SUM_VW`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `HOURLY_USAGE_SUM_VW` AS 
+  select 
+    `v`.`startTime` AS `startTime`,
+    `v`.`endTime` AS `endTime`,
+    `v`.`idAccountingResourceType` AS `idAccountingResourceType`,
+    `v`.`resourceType` AS `resourceType`,
+    sum(`v`.`resourceUnits`) AS `resourceUnits`,
+    `v`.`idEnterprise` AS `idEnterprise`,
+    `v`.`idVirtualDataCenter` AS `idVirtualDataCenter`,
+    `v`.`enterpriseName` AS `enterpriseName`,
+    `v`.`virtualDataCenter` AS `virtualDataCenter` 
+  from 
+    `HOURLY_USAGE_MAX_VW` `v` 
+  group by 
+    `v`.`startTime`,`v`.`endTime`,`v`.`idAccountingResourceType`,`v`.`resourceType`,`v`.`idEnterprise`,`v`.`idVirtualDataCenter`,`v`.`enterpriseName`,`v`.`virtualDataCenter`;
+
+#
+# Definition for the `MONTHLY_USAGE_SUM_VW` view : 
+#
+
+DROP VIEW IF EXISTS `MONTHLY_USAGE_SUM_VW`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `MONTHLY_USAGE_SUM_VW` AS 
+  select 
+    cast((`v`.`startTime` - interval (dayofmonth(`v`.`startTime`) - 1) day) as date) AS `startTime`,
+    last_day(`v`.`startTime`) AS `endTime`,
+    `v`.`idAccountingResourceType` AS `idAccountingResourceType`,
+    `v`.`resourceType` AS `resourceType`,
+    sum(`v`.`resourceUnits`) AS `resourceUnits`,
+    `v`.`idEnterprise` AS `idEnterprise`,
+    `v`.`idVirtualDataCenter` AS `idVirtualDataCenter`,
+    `v`.`enterpriseName` AS `enterpriseName`,
+    `v`.`virtualDataCenter` AS `virtualDataCenter` 
+  from 
+    `HOURLY_USAGE_MAX_VW` `v` 
+  group by 
+    `v`.`idAccountingResourceType`,`v`.`resourceType`,`v`.`idEnterprise`,`v`.`idVirtualDataCenter`,`v`.`enterpriseName`,`v`.`virtualDataCenter`;
+
+#
+# Data for the `chargeback_simple` table  (LIMIT 0,500)
+#
+
+# INSERT INTO `chargeback_simple` (`idAccountingResourceType`, `resourceType`, `costPerHour`) VALUES 
+#   (1,'cpu',0.03),
+#   (2,'ram',5E-5),
+#   (3,'hd',2.5E-11),
+#   (4,'externalstorage',5E-11),
+#   (5,'ipaddress',0.01);
+
+COMMIT;
+
+--
+-- ***********************************************************************************************************************
+--
+
+-- CRON Sample to Activate Accounting: 
+-- WARNING : CHECK user/passwd config!
+-- Runs every hour
+-- 0 * * * * mysql -hlocalhost -P3306 -uroot -proot -e "CALL kinton.UpdateAccounting();"
+
+-- Runs every Sunday at 12:00 and deletes records older than a week.
+-- 0 12 * * 0 mysql -uroot -hlocalhost -P3306 -proot -e "CALL kinton.DeleteOldRegisteredEvents(168);"
+-- or
+-- Runs once a day at midnight
+-- 0 0 * * * mysql -hlocalhost -P3306 -uroot  -proot -e "CALL kinton.DeleteOldRegisteredEvents(24);"
+
+
+-- Runs periodically Accounting Events : Available for MySQL > 5.1
+-- SET GLOBAL event_scheduler = ON;
+-- DROP EVENT IF EXISTS update_accounting_event;
+-- CREATE EVENT update_accounting_event ON SCHEDULE EVERY 1 HOUR
+-- DO
+-- CALL UpdateAccounting();
+--
+
+-- DROP EVENT IF EXISTS delete_old_registered_accounting_event;
+-- CREATE EVENT delete_old_registered_accounting_event ON SCHEDULE EVERY 24 HOUR
+-- DO
+-- CALL DeleteOldRegisteredEvents(24);
+
+-- or 
+
+-- DROP EVENT IF EXISTS delete_old_registered_accounting_event;
+-- CREATE EVENT delete_old_registered_accounting_event ON SCHEDULE EVERY 168 HOUR
+-- DO
+-- CALL DeleteOldRegisteredEvents(168);
+-- 
+
+
