@@ -2,7 +2,7 @@
 
 Name:           abiquo-server
 Version:        1.8
-Release:        0%{?dist}%{?buildstamp}
+Release:        1%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
@@ -12,6 +12,7 @@ Source1:        abiquo.properties.server
 Source2:        abiquo-accounting.cron
 Source3:        kinton-schema.sql
 Source4:	kinton-delta-1_7_6-to-1_8_0.sql
+Source5:	server.xml
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server 
 Requires:       /usr/sbin/sendmail /usr/bin/which
@@ -32,6 +33,7 @@ mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}/database
 mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}/examples
 mkdir -p $RPM_BUILD_ROOT%{abiquo_basedir}
 mkdir -p $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/webapps
+mkdir -p $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/conf/Catalina/localhost/
 mkdir -p $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 mkdir -p %{buildroot}/%{_sysconfdir}/cron.d/
 cp %{SOURCE3} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
@@ -39,6 +41,7 @@ cp %{SOURCE4} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp -r %{SOURCE1} $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 /usr/bin/unzip -d $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/webapps/server/ %{SOURCE0}
 cp %{SOURCE2} %{buildroot}/%{_sysconfdir}/cron.d/abiquo-accounting
+cp %{SOURCE5} $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/conf/Catalina/localhost/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -48,8 +51,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_docdir}/%{name}
 %{_sysconfdir}/cron.d/abiquo-accounting
 %{abiquo_basedir}/config/examples/abiquo.properties.server
+%config(noreplace) %{abiquo_basedir}/tomcat/conf/Catalina/localhost/server.xml
 
 %changelog
+* Tue Jun 14 2011 Sergio Rubio <rubiojr@frameos.org> - 1.8-1
+- add tomcat default context config
+
 * Fri Apr 15 2011 Sergio Rubio <srubio@abiquo.com> - 1.7.6-2
 - fixed install section
 
