@@ -30,6 +30,19 @@ alter table kinton.metering modify user varchar(128) NOT NULL;
 alter table kinton.session add authType varchar(20) NOT NULL;
 
 --
+-- Datastore rootPath longer
+--
+
+alter table kinton.datastore modify rootPath varchar(42) NOT NULL;
+
+--
+-- [ABICLOUDPREMIUM 1615]  Accounting changes --
+--
+
+alter table kinton.accounting_event_vm add costCode varchar(50) DEFAULT NULL;
+alter table kinton.accounting_event_detail add costCode varchar(50) DEFAULT NULL;
+
+--
 -- Drop table `kinton`.`auth_clientresource_exception`
 --
 
@@ -154,7 +167,8 @@ INSERT INTO `kinton`.`privilege` VALUES
  (43,'EVENTLOG_VIEW_ENTERPRISE',0),
  (44,'EVENTLOG_VIEW_ALL',0),
  (45,'APPLIB_VM_COST_CODE',0),
- (46,'USERS_MANAGE_ENTERPRISE_BRANDING',0);
+ (46,'USERS_MANAGE_ENTERPRISE_BRANDING',0),
+ (47,'SYSCONFIG_SHOW_REPORTS',0);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `privilege` ENABLE KEYS */;
 
@@ -188,7 +202,7 @@ CREATE  TABLE `kinton`.`roles_privileges` (
 LOCK TABLES `roles_privileges` WRITE;
 INSERT INTO `roles_privileges` VALUES
  (1,1,0),(1,2,0),(1,3,0),(1,4,0),(1,5,0),(1,6,0),(1,7,0),(1,8,0),(1,9,0),(1,10,0),(1,11,0),(1,12,0),(1,13,0),(1,14,0),(1,15,0),(1,16,0),(1,17,0),(1,18,0),(1,19,0),(1,20,0),(1,21,0),(1,22,0),
- (1,23,0),(1,24,0),(1,25,0),(1,26,0),(1,27,0),(1,28,0),(1,29,0),(1,30,0),(1,31,0),(1,32,0),(1,33,0),(1,34,0),(1,35,0),(1,36,0),(1,37,0),(1,38,0),(1,39,0),(1,40,0),(1,41,0),(1,42,0),(1,43,0),(1,44,0),(1,45,0),
+ (1,23,0),(1,24,0),(1,25,0),(1,26,0),(1,27,0),(1,28,0),(1,29,0),(1,30,0),(1,31,0),(1,32,0),(1,33,0),(1,34,0),(1,35,0),(1,36,0),(1,37,0),(1,38,0),(1,39,0),(1,40,0),(1,41,0),(1,42,0),(1,43,0),(1,44,0),(1,45,0),(1,47,0),
  (3,3,0),(3,12,0),(3,13,0),(3,14,0),(3,15,0),(3,16,0),(3,17,0),(3,18,0),(3,19,0),(3,20,0),(3,21,0),(3,22,0),(3,23,0),(3,24,0),(3,25,0),(3,26,0),(3,27,0),(3,28,0),(3,29,0),(3,30,0),(3,32,0),(3,34,0),
  (3,43,0),(2,12,0),(2,14,0),(2,17,0),(2,18,0),(2,19,0),(2,20,0),(2,21,0),(2,22,0),(2,23,0),(2,43,0);
 UNLOCK TABLES;
@@ -227,7 +241,7 @@ INSERT INTO `kinton`.`system_properties` (`name`, `value`, `description`) VALUES
  ("client.wiki.network.publicVlan","http://community.abiquo.com/display/ABI17/Manage+Networking+Configuration#ManageNetworkingConfiguration-PublicVLANManagement","public vlan creation wiki"),
  ("client.wiki.storage.storageDevice","http://community.abiquo.com/display/ABI17/Manage+External+Storage+%281.7.5%29#ManageExternalStorage%281.7.5%29-StorageDevicemanagement","storage device creation wiki"),
  ("client.wiki.storage.storagePool","http://community.abiquo.com/display/ABI17/Manage+External+Storage+%281.7.5%29#ManageExternalStorage%281.7.5%29-StoragePoolmanagement","storage pool creation wiki"), 
- ("client.wiki.storage.tier","http://community.abiquo.com/display/ABI17/Manage+External+Storage+%281.7.5%29#ManageExternalStorage%281.7.5%29-TierManagement","tier edition wiki"),
+("client.wiki.storage.tier","http://community.abiquo.com/display/ABI17/Manage+External+Storage+%281.7.5%29#ManageExternalStorage%281.7.5%29-TierManagement","tier edition wiki"),
  ("client.wiki.allocation.global","http://community.abiquo.com/display/ABI17/Manage+Allocation+Rules#ManageAllocationRules-Globalrulesmanagement","global rules wiki"),
  ("client.wiki.allocation.datacenter","http://community.abiquo.com/display/ABI17/Manage+Allocation+Rules#ManageAllocationRules-Datacenterrulesmanagement","datacenter rules wiki"),
  ("client.wiki.vdc.createVdc","http://community.abiquo.com/display/ABI17/Manage+Virtual+Datacenters#ManageVirtualDatacenters-CreatingaVirtualDatacenter","virtual datacenter creation wiki"),
@@ -249,7 +263,8 @@ INSERT INTO `kinton`.`system_properties` (`name`, `value`, `description`) VALUES
  ("client.wiki.config.general","http://community.abiquo.com/display/ABI17/Configuration+view","Configuration wiki"),
  ("client.wiki.config.heartbeat","http://community.abiquo.com/display/ABI17/Configuration+view#Configurationview-Heartbeating","Heartbeat configuration wiki"),
  ("client.wiki.config.licence","http://community.abiquo.com/display/ABI17/Configuration+view#Configurationview-Licensemanagement","Licence configuration wiki"),
- ("client.wiki.config.registration","http://community.abiquo.com/display/ABI17/Configuration+view#Configurationview-ProductRegistration","Registration wiki");
+ ("client.wiki.config.registration","http://community.abiquo.com/display/ABI17/Configuration+view#Configurationview-ProductRegistration","Registration wiki"),
+ ("client.main.billingUrl","","URL displayed when the report header logo is clicked, if empty the report button will not be displayed");
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `system_properties` ENABLE KEYS */;
 
@@ -277,49 +292,6 @@ ALTER TABLE `kinton`.`physicalmachine` ADD COLUMN `ipmiIP` VARCHAR(39)  DEFAULT 
  ADD COLUMN `ipmiUser` VARCHAR(255)  DEFAULT NULL AFTER `ipmiPort`,
  ADD COLUMN `ipmiPassword` VARCHAR(255)  DEFAULT NULL AFTER `ipmiUser`;
 
-
-
--- [ABICLOUDPREMIUM 1615]  Accounting changes --
-
-DROP TABLE IF EXISTS `kinton`.`accounting_event_vm`;
-CREATE TABLE `kinton`.`accounting_event_vm` (
-  `idVMAccountingEvent` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `idVM` INTEGER(10) UNSIGNED NOT NULL,
-  `idEnterprise` INTEGER(10) UNSIGNED NOT NULL,
-  `idVirtualDataCenter` INTEGER(10) UNSIGNED NOT NULL,
-  `idVirtualApp` INTEGER(10) UNSIGNED NOT NULL,
-  `cpu` INTEGER(10) UNSIGNED NOT NULL,
-  `ram` INTEGER(10) UNSIGNED NOT NULL,
-  `hd` BIGINT(20) UNSIGNED NOT NULL,
-  `startTime` TIMESTAMP NULL,
-  `stopTime` TIMESTAMP NULL,
-  `consolidated` BOOLEAN NOT NULL default 0,
-  `costCode` VARCHAR(50) DEFAULT NULL,
-  `version_c` int(11) DEFAULT '0',
-   PRIMARY KEY (`idVMAccountingEvent`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
-
-DROP TABLE IF EXISTS `kinton`.`accounting_event_detail`;
-CREATE TABLE `kinton`.`accounting_event_detail` (
-  `idAccountingEvent` BIGINT(20) NOT NULL AUTO_INCREMENT,
-  `startTime` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `endTime` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `idAccountingResourceType` TINYINT(4) NOT NULL COMMENT '1 - VirtualMachine-vcpu; 2 - VirtualMachine-vram; 3 - VirtualMachine-vhd; 4 - ExternalStorage; 5 - IPAddress;', 
-  `resourceType` VARCHAR(255)  NOT NULL,
-  `resourceUnits` BIGINT(20) NOT NULL,
-  `resourceName` VARCHAR(511)  NOT NULL,
-  `idEnterprise` INTEGER(11) UNSIGNED NOT NULL,
-  `idVirtualDataCenter` INTEGER(11) UNSIGNED NOT NULL,
-  `idVirtualApp` INTEGER(11) UNSIGNED,
-  `idVirtualMachine` INTEGER(11) UNSIGNED,
-  `enterpriseName` VARCHAR(255)  NOT NULL,
-  `virtualDataCenter` VARCHAR(255)  NOT NULL,
-  `virtualApp` VARCHAR(255) ,
-  `virtualMachine` VARCHAR(255) ,
-  `costCode` VARCHAR(50) DEFAULT NULL,
-  `version_c` int(11) DEFAULT '0',
-  PRIMARY KEY (`idAccountingEvent`)
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
 
 DROP PROCEDURE IF EXISTS `kinton`.`AccountingVMRegisterEvents`;
 DROP PROCEDURE IF EXISTS `kinton`.`UpdateAccounting`;
@@ -539,14 +511,62 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 ALTER TABLE `kinton`.`node_virtual_image_stateful_conversions` ADD COLUMN `idManagement` int(10) unsigned;
 ALTER TABLE `kinton`.`node_virtual_image_stateful_conversions` ADD CONSTRAINT `idManagement_FK4` FOREIGN KEY (`idManagement`) REFERENCES `volume_management` (`idManagement`);
 
+DELETE FROM `kinton`.`system_properties` WHERE name = 'client.infra.useVirtualBox';
+-- [ABICLOUDPREMIUM-1476] Changes to fit the LDAP integration.
+alter table kinton.user modify user varchar(128) NOT NULL;
+alter table kinton.user add authType varchar(20) NOT NULL;
+alter table kinton.user modify column password varchar(32);
+update kinton.user set authtype = 'ABIQUO';
+alter table kinton.session modify user varchar(128) NOT NULL;
+alter table kinton.user modify name varchar(128) NOT NULL;
+alter table kinton.metering modify user varchar(128) NOT NULL;
+alter table kinton.session add authType varchar(20) NOT NULL;
+
+--
+-- Definition of table `kinton`.`role_ldap`
+--
+DROP TABLE IF EXISTS `kinton`.`role_ldap`;
+CREATE  TABLE `kinton`.`role_ldap` (
+  `idRole_ldap` INT(3) NOT NULL AUTO_INCREMENT ,
+  `idRole` INT(10) UNSIGNED NOT NULL ,
+  `role_ldap` VARCHAR(128) NOT NULL ,
+  `version_c` int(11) default 0,
+  PRIMARY KEY (`idRole_ldap`) ,
+  KEY `fk_role_ldap_role` (`idRole`) ,
+  CONSTRAINT `fk_role_ldap_role` FOREIGN KEY (`idRole` ) REFERENCES `kinton`.`role` (`idRole` ) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+insert into kinton.role_ldap(idRole, role_ldap,  version_c) values ((select idRole from kinton.role where type = 'SYS_ADMIN'), 'LDAP_SYS_ADMIN', 0);
+insert into kinton.role_ldap(idRole, role_ldap, version_c) values ((select idRole from kinton.role where type = 'USER'), 'LDAP_USER', 0);
+insert into kinton.role_ldap(idRole, role_ldap, version_c) values ((select idRole from kinton.role where type = 'ENTERPRISE_ADMIN'), 'LDAP_ENTERPRISE_ADMIN', 0);
+
+ALTER TABLE `kinton`.`virtualmachine` ADD COLUMN `password` VARCHAR(32) DEFAULT NULL;
+
+--
+-- Definition of table `kinton`.`ucs_rack`
+--
+DROP TABLE IF EXISTS `kinton`.`ucs_rack`;
+CREATE TABLE  `kinton`.`ucs_rack` (
+  `idRack` int(15) unsigned NOT NULL,
+  `ip` varchar(20) NOT NULL,
+  `port` int(5) NOT NULL,
+  `user_rack` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  KEY `id_rack_FK` (`idRack`),
+  CONSTRAINT `id_rack_FK` FOREIGN KEY (`idRack`) REFERENCES `rack` (`idRack`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 DROP TRIGGER IF EXISTS `kinton`.`update_virtualmachine_update_stats`;
 DROP TRIGGER IF EXISTS `kinton`.`update_rasd_management_update_stats`;
 DROP TRIGGER IF EXISTS `kinton`.`update_rasd_update_stats`;
-
 DROP PROCEDURE IF EXISTS `kinton`.`CalculateCloudUsageStats`;
 DROP PROCEDURE IF EXISTS `kinton`.`CalculateEnterpriseResourcesStats`;
 DROP PROCEDURE IF EXISTS `kinton`.`CalculateVdcEnterpriseStats`;
 DROP PROCEDURE IF EXISTS `kinton`.`CalculateVappEnterpriseStats`;
+DROP TRIGGER IF EXISTS `kinton`.`virtualdatacenter_updated`;
+DROP TRIGGER IF EXISTS `kinton`.`update_volume_management_update_stats`;
 
 DELIMITER |
 CREATE TRIGGER `kinton`.`update_virtualmachine_update_stats` AFTER UPDATE ON `kinton`.`virtualmachine`
@@ -1369,6 +1389,108 @@ CREATE PROCEDURE `kinton`.CalculateVappEnterpriseStats()
 
    END;
 |
+CREATE TRIGGER `kinton`.`virtualdatacenter_updated` AFTER UPDATE ON `kinton`.`virtualdatacenter`
+    FOR EACH ROW BEGIN
+    DECLARE vlanNetworkIdObj INTEGER;    
+        	  DECLARE networkNameObj VARCHAR(40);
+        IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN   
+            -- INSERT INTO debug_msg (msg) VALUES (CONCAT('OLD.networktypeID ', IFNULL(OLD.networktypeID,'NULL'),'NEW.networktypeID ', IFNULL(NEW.networktypeID,'NULL')));
+            -- Checks for changes
+            IF OLD.name != NEW.name THEN
+                -- Name changed !!!
+                UPDATE IGNORE vdc_enterprise_stats SET vdcName = NEW.name
+                WHERE idVirtualDataCenter = NEW.idVirtualDataCenter;
+                -- Changes also in Vapp stats
+                UPDATE IGNORE vapp_enterprise_stats SET vdcName = NEW.name
+                WHERE idVirtualApp IN (SELECT idVirtualApp FROM virtualapp WHERE idVirtualDataCenter=NEW.idVirtualDataCenter);
+            END IF; 
+            UPDATE IGNORE vdc_enterprise_stats 
+            SET vCpuReserved = vCpuReserved - OLD.cpuHard + NEW.cpuHard,
+                memoryReserved = memoryReserved - OLD.ramHard + NEW.ramHard,
+                localStorageReserved = localStorageReserved - OLD.hdHard + NEW.hdHard,
+                -- publicIPsReserved = publicIPsReserved - OLD.publicIPHard + NEW.publicIPHard,
+                extStorageReserved = extStorageReserved - OLD.storageHard + NEW.storageHard,
+                vlanReserved = vlanReserved - OLD.vlanHard + NEW.vlanHard
+            WHERE idVirtualDataCenter = NEW.idVirtualDataCenter;            
+        END IF;
+        IF OLD.networktypeID IS NOT NULL AND NEW.networktypeID IS NULL THEN
+        -- Remove VlanUsed
+	    BEGIN
+		DECLARE done INTEGER DEFAULT 0;
+		DECLARE cursorVlan CURSOR FOR SELECT DISTINCT vn.network_id, vn.network_name FROM vlan_network vn WHERE vn.network_id = OLD.networktypeID;
+		DECLARE CONTINUE HANDLER FOR SQLSTATE '02000' SET done = 1;
+		    
+		OPEN cursorVlan;
+		    
+		REPEAT
+		   FETCH cursorVlan into vlanNetworkIdObj, networkNameObj;
+		   IF NOT done THEN
+
+		    -- INSERT INTO debug_msg (msg) VALUES (CONCAT('VDC UPDATED -> OLD.networktypeID ', IFNULL(OLD.networktypeID,'NULL'), 'Enterprise: ',IFNULL(OLD.idEnterprise,'NULL'),' VDC: ',IFNULL(OLD.idVirtualDataCenter,'NULL'),IFNULL(vlanNetworkIdObj,'NULL'),IFNULL(networkNameObj,'NULL')));
+			IF EXISTS( SELECT * FROM `information_schema`.ROUTINES WHERE ROUTINE_SCHEMA='kinton' AND ROUTINE_TYPE='PROCEDURE' AND ROUTINE_NAME='AccountingVLANRegisterEvents' ) THEN
+				CALL AccountingVLANRegisterEvents('DELETE_VLAN',vlanNetworkIdObj, networkNameObj, OLD.idVirtualDataCenter,OLD.idEnterprise);
+			END IF;
+			-- Statistics
+			UPDATE IGNORE cloud_usage_stats
+				SET     vlanUsed = vlanUsed - 1
+				WHERE idDataCenter = -1;
+			UPDATE IGNORE enterprise_resources_stats 
+				SET     vlanUsed = vlanUsed - 1
+				WHERE idEnterprise = OLD.idEnterprise;
+			UPDATE IGNORE vdc_enterprise_stats 
+				SET     vlanUsed = vlanUsed - 1
+			    WHERE idVirtualDataCenter = OLD.idVirtualDataCenter;
+		   END IF;    
+		UNTIL done END REPEAT;
+		CLOSE cursorVlan;
+	    END;
+        END IF;
+    END;
+|
+CREATE TRIGGER `kinton`.`virtualdatacenter_deleted` BEFORE DELETE ON `kinton`.`virtualdatacenter`
+    FOR EACH ROW BEGIN
+	DECLARE currentIdManagement INTEGER DEFAULT -1;
+	DECLARE currentDataCenter INTEGER DEFAULT -1;
+	DECLARE currentIpAddress VARCHAR(20) DEFAULT '';
+	DECLARE no_more_ipsfreed INT;
+	DECLARE curIpFreed CURSOR FOR SELECT dc.idDataCenter, ipm.ip, ra.idManagement	
+           FROM ip_pool_management ipm, network_configuration nc, vlan_network vn, datacenter dc, rasd_management ra
+           WHERE ipm.dhcp_service_id=nc.dhcp_service_id
+           AND vn.network_configuration_id = nc.network_configuration_id
+           AND vn.network_id = dc.network_id
+           AND ra.idManagement = ipm.idManagement
+           AND ra.idVirtualDataCenter = OLD.idVirtualDataCenter;
+	   DECLARE CONTINUE HANDLER FOR NOT FOUND SET no_more_ipsfreed = 1;	  
+        IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN
+            UPDATE IGNORE cloud_usage_stats SET numVDCCreated = numVDCCreated-1 WHERE idDataCenter = OLD.idDataCenter;  
+            -- Remove Stats
+            DELETE FROM vdc_enterprise_stats WHERE idVirtualDataCenter = OLD.idVirtualDataCenter;	
+           -- 	
+	SET no_more_ipsfreed = 0;	    
+	    OPEN curIpFreed;  	    	
+   		my_loop:WHILE(no_more_ipsfreed=0) DO 
+   		FETCH curIpFreed INTO currentDataCenter, currentIpAddress, currentIdManagement;
+		IF no_more_ipsfreed=1 THEN
+                	LEAVE my_loop;
+	         END IF;
+--		INSERT INTO debug_msg (msg) VALUES (CONCAT('IP_FREED: ',currentIpAddress, ' - idManagement: ', currentIdManagement, ' - OLD.idVirtualDataCenter: ', OLD.idVirtualDataCenter, ' - idEnterpriseObj: ', OLD.idEnterprise));
+		-- We reset MAC and NAME for the reserved IPs. Java code should do this!
+		UPDATE ip_pool_management set mac=NULL, name=NULL WHERE idManagement = currentIdManagement;
+		IF EXISTS( SELECT * FROM `information_schema`.ROUTINES WHERE ROUTINE_SCHEMA='kinton' AND ROUTINE_TYPE='PROCEDURE' AND ROUTINE_NAME='AccountingIPsRegisterEvents' ) THEN
+               		CALL AccountingIPsRegisterEvents('IP_FREED',currentIdManagement,currentIpAddress,OLD.idVirtualDataCenter, OLD.idEnterprise);
+           	END IF;                    
+		UPDATE IGNORE cloud_usage_stats SET publicIPsUsed = publicIPsUsed-1 WHERE idDataCenter = currentDataCenter;
+		UPDATE IGNORE dc_enterprise_stats SET publicIPsReserved = publicIPsReserved-1 WHERE idDataCenter = currentDataCenter;
+		UPDATE IGNORE enterprise_resources_stats SET publicIPsReserved = publicIPsReserved-1 WHERE idEnterprise = OLD.idEnterprise;	
+	    END WHILE my_loop;	       
+	    CLOSE curIpFreed;
+        END IF;
+    END;
+|
 DELIMITER ;
 
+--
+-- Datastore rootPath longer
+--
 
+alter table kinton.datastore modify rootPath varchar(42) NOT NULL;
