@@ -11,19 +11,22 @@
 ALTER TABLE `kinton`.`vappstateful_conversions` MODIFY COLUMN `idUser` int(10) unsigned NOT NULL;
 
 -- [ABICLOUDPREMIUM-1598]
--- ALTER TABLE `kinton`.`enterprise` ADD `isReservationRestricted` tinyint(1) DEFAULT 0;
+ALTER TABLE `kinton`.`enterprise` ADD `isReservationRestricted` tinyint(1) DEFAULT 0;
 
 -- [ABICLOUDPREMIUM-1490] Volumes are attached directly. Reserved state disappears.
 update `kinton`.`volume_management` set state = 1 where state = 2;
 
 -- [ABICLOUDPREMIUM-1616]
--- ALTER TABLE `kinton`.`virtualimage` ADD cost_code VARCHAR(50);
+ALTER TABLE `kinton`.`virtualimage` ADD cost_code VARCHAR(50);
+
+DELETE FROM `kinton`.`system_properties` WHERE name = 'client.infra.useVirtualBox';
 
 -- [ABICLOUDPREMIUM-1476] Changes to fit the LDAP integration.
 alter table kinton.user modify user varchar(128) NOT NULL;
 alter table kinton.user add authType varchar(20) NOT NULL;
 alter table kinton.user modify column password varchar(32);
-update kinton.user set authtype = 'ABIQUO';
+alter table kinton.user modify column email varchar(200);
+update kinton.user set authType = 'ABIQUO';
 alter table kinton.session modify user varchar(128) NOT NULL;
 alter table kinton.user modify name varchar(128) NOT NULL;
 alter table kinton.metering modify user varchar(128) NOT NULL;
@@ -59,6 +62,7 @@ DROP TABLE IF EXISTS `kinton`.`auth_clientresource`;
 -- Definition of table `kinton`.`role_ldap`
 --
 
+DROP TABLE IF EXISTS `kinton`.`role_ldap`;
 CREATE  TABLE `kinton`.`role_ldap` (
   `idRole_ldap` INT(3) NOT NULL AUTO_INCREMENT ,
   `idRole` INT(10) UNSIGNED NOT NULL ,
@@ -67,12 +71,8 @@ CREATE  TABLE `kinton`.`role_ldap` (
   PRIMARY KEY (`idRole_ldap`) ,
   KEY `fk_role_ldap_role` (`idRole`) ,
   CONSTRAINT `fk_role_ldap_role` FOREIGN KEY (`idRole` ) REFERENCES `kinton`.`role` (`idRole` ) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4  DEFAULT CHARSET=utf8;
 
-
-insert into kinton.role_ldap(idRole, role_ldap,  version_c) values ((select idRole from kinton.role where type = 'SYS_ADMIN'), 'LDAP_SYS_ADMIN', 0);
-insert into kinton.role_ldap(idRole, role_ldap, version_c) values ((select idRole from kinton.role where type = 'USER'), 'LDAP_USER', 0);
-insert into kinton.role_ldap(idRole, role_ldap, version_c) values ((select idRole from kinton.role where type = 'ENTERPRISE_ADMIN'), 'LDAP_ENTERPRISE_ADMIN', 0);
 
 UPDATE `kinton`.`metering` SET actionperformed="PERSISTENT_PROCESS_START" WHERE actionperformed="STATEFUL_PROCESS_START";
 UPDATE `kinton`.`metering` SET actionperformed="PERSISTENT_RAW_FINISHED" WHERE actionperformed="STATEFUL_RAW_FINISHED";
@@ -90,7 +90,7 @@ UPDATE `kinton`.`metering` SET actionperformed="PERSISTENT_INITIATOR_ADDED" WHER
 
 ALTER TABLE `kinton`.`role` DROP COLUMN `securityLevel` , 
 DROP COLUMN `largeDescription` , DROP COLUMN `shortDescription` , 
-DROP COLUMN `type` , ADD COLUMN `name` VARCHAR(40) NOT NULL  AFTER `version_c` , 
+DROP COLUMN `type` , ADD COLUMN `name` VARCHAR(40) NOT NULL DEFAULT 'auto_name'  AFTER `version_c` , 
 ADD COLUMN `idEnterprise` INT(10) UNSIGNED NULL DEFAULT NULL  AFTER `name` ,
 ADD COLUMN `blocked` TINYINT(1)  NOT NULL DEFAULT 0  AFTER `idEnterprise` , 
   ADD CONSTRAINT `fk_role_enterprise`
@@ -168,7 +168,8 @@ INSERT INTO `kinton`.`privilege` VALUES
  (44,'EVENTLOG_VIEW_ALL',0),
  (45,'APPLIB_VM_COST_CODE',0),
  (46,'USERS_MANAGE_ENTERPRISE_BRANDING',0),
- (47,'SYSCONFIG_SHOW_REPORTS',0);
+ (47,'SYSCONFIG_SHOW_REPORTS',0),
+ (48,'USERS_DEFINE_AS_MANAGER',0);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `privilege` ENABLE KEYS */;
 
@@ -202,9 +203,9 @@ CREATE  TABLE `kinton`.`roles_privileges` (
 LOCK TABLES `roles_privileges` WRITE;
 INSERT INTO `roles_privileges` VALUES
  (1,1,0),(1,2,0),(1,3,0),(1,4,0),(1,5,0),(1,6,0),(1,7,0),(1,8,0),(1,9,0),(1,10,0),(1,11,0),(1,12,0),(1,13,0),(1,14,0),(1,15,0),(1,16,0),(1,17,0),(1,18,0),(1,19,0),(1,20,0),(1,21,0),(1,22,0),
- (1,23,0),(1,24,0),(1,25,0),(1,26,0),(1,27,0),(1,28,0),(1,29,0),(1,30,0),(1,31,0),(1,32,0),(1,33,0),(1,34,0),(1,35,0),(1,36,0),(1,37,0),(1,38,0),(1,39,0),(1,40,0),(1,41,0),(1,42,0),(1,43,0),(1,44,0),(1,45,0),(1,47,0),
- (3,3,0),(3,12,0),(3,13,0),(3,14,0),(3,15,0),(3,16,0),(3,17,0),(3,18,0),(3,19,0),(3,20,0),(3,21,0),(3,22,0),(3,23,0),(3,24,0),(3,25,0),(3,26,0),(3,27,0),(3,28,0),(3,29,0),(3,30,0),(3,32,0),(3,34,0),
- (3,43,0),(2,12,0),(2,14,0),(2,17,0),(2,18,0),(2,19,0),(2,20,0),(2,21,0),(2,22,0),(2,23,0),(2,43,0);
+ (1,23,0),(1,24,0),(1,25,0),(1,26,0),(1,27,0),(1,28,0),(1,29,0),(1,30,0),(1,31,0),(1,32,0),(1,33,0),(1,34,0),(1,35,0),(1,36,0),(1,37,0),(1,38,0),(1,39,0),(1,40,0),(1,41,0),(1,42,0),(1,43,0),(1,44,0),(1,45,0),(1,48,0),
+ (3,3,0),(3,12,0),(3,13,0),(3,14,0),(3,15,0),(3,16,0),(3,17,0),(3,18,0),(3,19,0),(3,20,0),(3,21,0),(3,22,0),(3,23,0),(3,24,0),(3,25,0),(3,26,0),(3,27,0),(3,28,0),(3,29,0),(3,30,0),(3,32,0),(3,34,0),(3,43,0),(3,48,0),
+ (2,12,0),(2,14,0),(2,17,0),(2,18,0),(2,19,0),(2,20,0),(2,21,0),(2,22,0),(2,23,0),(2,43,0);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `roles_privileges` ENABLE KEYS */;
 
@@ -222,7 +223,6 @@ UNLOCK TABLES;
 --
 -- System properties
 --
-
 
 /*!40000 ALTER TABLE `system_properties` DISABLE KEYS */;
 LOCK TABLES `system_properties` WRITE;
@@ -292,6 +292,11 @@ ALTER TABLE `kinton`.`physicalmachine` ADD COLUMN `ipmiIP` VARCHAR(39)  DEFAULT 
  ADD COLUMN `ipmiUser` VARCHAR(255)  DEFAULT NULL AFTER `ipmiPort`,
  ADD COLUMN `ipmiPassword` VARCHAR(255)  DEFAULT NULL AFTER `ipmiUser`;
 
+-- Adding the foreign key over idEnterprise
+ALTER TABLE `kinton`.`physicalmachine` ADD CONSTRAINT `PhysicalMachine_FK6` 
+  FOREIGN KEY (`idEnterprise`) 
+  REFERENCES `kinton`.`enterprise` (`idEnterprise`) 
+  ON DELETE SET NULL;
 
 DROP PROCEDURE IF EXISTS `kinton`.`AccountingVMRegisterEvents`;
 DROP PROCEDURE IF EXISTS `kinton`.`UpdateAccounting`;
@@ -376,7 +381,7 @@ SELECT DISTINCT
       T.`VIRTUAL_DATACENTER`,
       T.`VIRTUAL_APP`,
       T.`VIRTUAL_MACHINE`,
-      ''
+      T.`costCode`
 FROM `LAST_HOUR_USAGE_VM_VW` T
 UNION ALL
 SELECT DISTINCT
@@ -394,7 +399,7 @@ SELECT DISTINCT
       T.`VIRTUAL_DATACENTER`,
       T.`VIRTUAL_APP`,
       T.`VIRTUAL_MACHINE`,
-      ''
+      T.`costCode`
 FROM `LAST_HOUR_USAGE_VM_VW` T
 UNION ALL
 SELECT DISTINCT
@@ -512,34 +517,6 @@ ALTER TABLE `kinton`.`node_virtual_image_stateful_conversions` ADD COLUMN `idMan
 ALTER TABLE `kinton`.`node_virtual_image_stateful_conversions` ADD CONSTRAINT `idManagement_FK4` FOREIGN KEY (`idManagement`) REFERENCES `volume_management` (`idManagement`);
 
 DELETE FROM `kinton`.`system_properties` WHERE name = 'client.infra.useVirtualBox';
--- [ABICLOUDPREMIUM-1476] Changes to fit the LDAP integration.
-alter table kinton.user modify user varchar(128) NOT NULL;
-alter table kinton.user add authType varchar(20) NOT NULL;
-alter table kinton.user modify column password varchar(32);
-update kinton.user set authtype = 'ABIQUO';
-alter table kinton.session modify user varchar(128) NOT NULL;
-alter table kinton.user modify name varchar(128) NOT NULL;
-alter table kinton.metering modify user varchar(128) NOT NULL;
-alter table kinton.session add authType varchar(20) NOT NULL;
-
---
--- Definition of table `kinton`.`role_ldap`
---
-DROP TABLE IF EXISTS `kinton`.`role_ldap`;
-CREATE  TABLE `kinton`.`role_ldap` (
-  `idRole_ldap` INT(3) NOT NULL AUTO_INCREMENT ,
-  `idRole` INT(10) UNSIGNED NOT NULL ,
-  `role_ldap` VARCHAR(128) NOT NULL ,
-  `version_c` int(11) default 0,
-  PRIMARY KEY (`idRole_ldap`) ,
-  KEY `fk_role_ldap_role` (`idRole`) ,
-  CONSTRAINT `fk_role_ldap_role` FOREIGN KEY (`idRole` ) REFERENCES `kinton`.`role` (`idRole` ) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-insert into kinton.role_ldap(idRole, role_ldap,  version_c) values ((select idRole from kinton.role where type = 'SYS_ADMIN'), 'LDAP_SYS_ADMIN', 0);
-insert into kinton.role_ldap(idRole, role_ldap, version_c) values ((select idRole from kinton.role where type = 'USER'), 'LDAP_USER', 0);
-insert into kinton.role_ldap(idRole, role_ldap, version_c) values ((select idRole from kinton.role where type = 'ENTERPRISE_ADMIN'), 'LDAP_ENTERPRISE_ADMIN', 0);
 
 ALTER TABLE `kinton`.`virtualmachine` ADD COLUMN `password` VARCHAR(32) DEFAULT NULL;
 
@@ -553,6 +530,7 @@ CREATE TABLE  `kinton`.`ucs_rack` (
   `port` int(5) NOT NULL,
   `user_rack` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
+  `version_c` int(11) DEFAULT '0',
   KEY `id_rack_FK` (`idRack`),
   CONSTRAINT `id_rack_FK` FOREIGN KEY (`idRack`) REFERENCES `rack` (`idRack`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -561,12 +539,13 @@ CREATE TABLE  `kinton`.`ucs_rack` (
 DROP TRIGGER IF EXISTS `kinton`.`update_virtualmachine_update_stats`;
 DROP TRIGGER IF EXISTS `kinton`.`update_rasd_management_update_stats`;
 DROP TRIGGER IF EXISTS `kinton`.`update_rasd_update_stats`;
+DROP TRIGGER IF EXISTS `kinton`.`update_volume_management_update_stats`;
+DROP TRIGGER IF EXISTS `kinton`.`virtualdatacenter_updated`;
+DROP TRIGGER IF EXISTS `kinton`.`virtualdatacenter_deleted`;
 DROP PROCEDURE IF EXISTS `kinton`.`CalculateCloudUsageStats`;
 DROP PROCEDURE IF EXISTS `kinton`.`CalculateEnterpriseResourcesStats`;
 DROP PROCEDURE IF EXISTS `kinton`.`CalculateVdcEnterpriseStats`;
 DROP PROCEDURE IF EXISTS `kinton`.`CalculateVappEnterpriseStats`;
-DROP TRIGGER IF EXISTS `kinton`.`virtualdatacenter_updated`;
-DROP TRIGGER IF EXISTS `kinton`.`update_volume_management_update_stats`;
 
 DELIMITER |
 CREATE TRIGGER `kinton`.`update_virtualmachine_update_stats` AFTER UPDATE ON `kinton`.`virtualmachine`
@@ -902,6 +881,66 @@ CREATE TRIGGER `kinton`.`update_rasd_update_stats` AFTER UPDATE ON `kinton`.`ras
             END IF;
         END IF;
     END;    
+|
+CREATE TRIGGER `kinton`.`update_volume_management_update_stats` AFTER UPDATE ON `kinton`.`volume_management`
+    FOR EACH ROW BEGIN
+        DECLARE idDataCenterObj INTEGER;
+        DECLARE idVirtualAppObj INTEGER;
+        DECLARE idVirtualDataCenterObj INTEGER;
+        DECLARE idEnterpriseObj INTEGER;
+        DECLARE reservedSize BIGINT;
+        DECLARE incr INTEGER;
+        IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN       
+        SET incr = NEW.usedSize-OLD.usedSize;
+        SELECT sd.idDataCenter INTO idDataCenterObj
+        FROM storage_pool sp, storage_device sd
+        WHERE OLD.idStorage = sp.idStorage
+        AND sp.idStorageDevice = sd.id;
+        
+        SELECT vapp.idVirtualApp, vapp.idVirtualDataCenter INTO idVirtualAppObj, idVirtualDataCenterObj
+        FROM rasd_management rasd, virtualapp vapp
+        WHERE OLD.idManagement = rasd.idManagement
+        AND rasd.idVirtualApp = vapp.idVirtualApp;
+        
+        SELECT vdc.idEnterprise INTO idEnterpriseObj
+        FROM virtualdatacenter vdc
+        WHERE vdc.idVirtualDataCenter = idVirtualDataCenterObj;
+        
+        SELECT r.limitResource INTO reservedSize
+        FROM rasd_management rm, rasd r
+        WHERE rm.idManagement = NEW.idManagement
+        AND r.instanceID = rm.idResource;
+        
+        IF NEW.state != OLD.state THEN
+            IF NEW.state = 1 THEN 
+                UPDATE IGNORE cloud_usage_stats SET storageUsed = storageUsed+reservedSize WHERE idDataCenter = idDataCenterObj;
+    UPDATE IGNORE vapp_enterprise_stats SET volAttached = volAttached+1 WHERE idVirtualApp = idVirtualAppObj;
+                UPDATE IGNORE enterprise_resources_stats 
+                    SET     extStorageUsed = extStorageUsed +  reservedSize
+                    WHERE idEnterprise = idEnterpriseObj;
+                UPDATE IGNORE dc_enterprise_stats 
+                    SET     extStorageUsed = extStorageUsed +  reservedSize
+                    WHERE idDataCenter = idDataCenterObj AND idEnterprise = idEnterpriseObj;
+                UPDATE IGNORE vdc_enterprise_stats 
+                    SET     volAttached = volAttached + 1, extStorageUsed = extStorageUsed +  reservedSize
+                WHERE idVirtualDataCenter = idVirtualDataCenterObj;
+            END IF;     
+            IF OLD.state = 1 THEN 
+                UPDATE IGNORE cloud_usage_stats SET storageUsed = storageUsed-reservedSize WHERE idDataCenter = idDataCenterObj;
+                UPDATE IGNORE vapp_enterprise_stats SET volAttached = volAttached-1 WHERE idVirtualApp = idVirtualAppObj;
+                UPDATE IGNORE enterprise_resources_stats 
+                    SET     extStorageUsed = extStorageUsed +  reservedSize
+                    WHERE idEnterprise = idEnterpriseObj;
+                UPDATE IGNORE dc_enterprise_stats 
+                    SET     extStorageUsed = extStorageUsed +  reservedSize
+                    WHERE idDataCenter = idDataCenterObj AND idEnterprise = idEnterpriseObj;
+                UPDATE IGNORE vdc_enterprise_stats 
+                    SET     volAttached = volAttached - 1, extStorageUsed = extStorageUsed +  reservedSize
+                WHERE idVirtualDataCenter = idVirtualDataCenterObj;
+            END IF;
+        END IF;
+    END IF;
+    END;
 |
 CREATE PROCEDURE `kinton`.CalculateCloudUsageStats()
    BEGIN
@@ -1488,9 +1527,3 @@ CREATE TRIGGER `kinton`.`virtualdatacenter_deleted` BEFORE DELETE ON `kinton`.`v
     END;
 |
 DELIMITER ;
-
---
--- Datastore rootPath longer
---
-
-alter table kinton.datastore modify rootPath varchar(42) NOT NULL;
