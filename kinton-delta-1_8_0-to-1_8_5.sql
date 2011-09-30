@@ -23,26 +23,9 @@ ALTER TABLE `kinton`.`rasd`  CHANGE COLUMN `resourceSubType` `resourceSubType` v
 -- ---------------------------------------------- --
 --   DATA CHANGES (insert, update, delete, etc)   --
 -- ---------------------------------------------- --
-
-
-
-/*!40000 ALTER TABLE `kinton`.`privilege` DISABLE KEYS */;
-LOCK TABLES `kinton`.`privilege` WRITE;
-INSERT INTO `kinton`.`privilege` VALUES (51,'APPLIB_ALLOW_MODIFY_SHARED',0);
-UNLOCK TABLES;
-/*!40000 ALTER TABLE `kinton`.`privilege` ENABLE KEYS */;
-
-/*!40000 ALTER TABLE `kinton`.`roles_privileges` DISABLE KEYS */;
-LOCK TABLES `kinton`.`roles_privileges` WRITE;
-INSERT INTO `kinton`.`roles_privileges` VALUES (1,51,0);
-UNLOCK TABLES;
-/*!40000 ALTER TABLE `kinton`.`roles_privileges` ENABLE KEYS */;
-
 -- First I need to update some rows before to delete the `default_network` field
 UPDATE `kinton`.`virtualdatacenter` vdc, `kinton`.`vlan_network` v set vdc.default_vlan_network_id = v.vlan_network_id WHERE vdc.networktypeID = v.network_id and v.default_network = 1;
 ALTER TABLE `kinton`.`vlan_network` DROP COLUMN `default_network`;
-
-
 
 -- ---------------------------------------------- --
 --                  PROCEDURES                    --
