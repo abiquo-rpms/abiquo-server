@@ -199,7 +199,7 @@ CREATE TABLE  `kinton`.`vlan_network` (
   `network_id` int(11) unsigned NOT NULL,
   `network_configuration_id` int(11) unsigned NOT NULL, `network_name` varchar(40) NOT NULL,
   `vlan_tag` int(4) unsigned DEFAULT NULL,
-  `default_network` boolean NOT NULL default 0,
+  `networktype` varchar(15) NOT NULL DEFAULT 'internal',
   `version_c` integer NOT NULL DEFAULT 1,
   `enterprise_id` int(10) unsigned DEFAULT NULL,
   PRIMARY KEY  (`vlan_network_id`),
@@ -295,7 +295,7 @@ CREATE TABLE  `kinton`.`enterprise` (
 
 /*!40000 ALTER TABLE `enterprise` DISABLE KEYS */;
 LOCK TABLES `enterprise` WRITE;
-INSERT INTO `kinton`.`enterprise` VALUES  (1,'Abiquo',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1);
+INSERT INTO `kinton`.`enterprise` VALUES  (1,'Abiquo',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `enterprise` ENABLE KEYS */;
 
@@ -503,9 +503,6 @@ CREATE TABLE  `kinton`.`physicalmachine` (
   `ram` int(7) NOT NULL,
   `cpu` int(11) NOT NULL,
   `hd` bigint(20) unsigned NOT NULL,
-  `realram` int(7) NOT NULL,
-  `realcpu` int(11) NOT NULL,
-  `realStorage` bigint(20) unsigned NOT NULL,
   `cpuRatio` int(7) NOT NULL,
   `ramUsed` int(7) NOT NULL,
   `cpuUsed` int(11) NOT NULL,
@@ -660,7 +657,7 @@ CREATE TABLE  `kinton`.`rasd` (
   `parent` varchar(50) default NULL,
   `poolID` varchar(50) default NULL,
   `reservation` BIGINT default NULL,
-  `resourceSubType` varchar(15) default NULL,
+  `resourceSubType` varchar(15) default NULL COMMENT 'For IPs: 0 = private, 1 = public, 2 = external',
   `resourceType` int(5) NOT NULL,
   `virtualQuantity` int(20) default NULL,
   `weight` int(5) default NULL,
@@ -725,6 +722,7 @@ CREATE TABLE  `kinton`.`ip_pool_management` (
   `vlan_network_name` varchar(40),
   `vlan_network_id` int(11) unsigned,
   `quarantine` boolean NOT NULL default 0,
+  `available` boolean NOT NULL default 1,
   `version_c` integer NOT NULL DEFAULT 1,
   KEY `id_management_FK` (`idManagement`),
   KEY `ippool_dhcpservice_FK` (`dhcp_service_id`),
@@ -743,7 +741,7 @@ CREATE TABLE  `kinton`.`repository` (
   `idRepository` int(3) unsigned NOT NULL auto_increment,
   `idDataCenter` INT UNSIGNED NOT NULL ,
   `name` varchar(30),
-  `URL` varchar(50) NOT NULL,
+  `URL` varchar(255) NOT NULL,
   `version_c` int(11) default 0,
   PRIMARY KEY  (`idRepository`),
   CONSTRAINT `fk_idDataCenter` FOREIGN KEY ( `idDataCenter` ) REFERENCES `datacenter` ( `idDataCenter` ) ON DELETE CASCADE
@@ -870,7 +868,10 @@ INSERT INTO `privilege` VALUES
  (45,'APPLIB_VM_COST_CODE',0),
  (46,'USERS_MANAGE_ENTERPRISE_BRANDING',0),
  (47,'SYSCONFIG_SHOW_REPORTS',0),
- (48,'USERS_DEFINE_AS_MANAGER',0);
+ (48,'USERS_DEFINE_AS_MANAGER',0),
+ (49,'PRICING_VIEW',0),
+ (50,'PRICING_MANAGE',0),
+ (51,'APPLIB_ALLOW_MODIFY_SHARED',0);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `privilege` ENABLE KEYS */;
 
@@ -881,8 +882,8 @@ UNLOCK TABLES;
 /*!40000 ALTER TABLE `roles_privileges` DISABLE KEYS */;
 LOCK TABLES `roles_privileges` WRITE;
 INSERT INTO `roles_privileges` VALUES
- (1,1,0),(1,2,0),(1,3,0),(1,4,0),(1,5,0),(1,6,0),(1,7,0),(1,8,0),(1,9,0),(1,10,0),(1,11,0),(1,12,0),(1,13,0),(1,14,0),(1,15,0),(1,16,0),(1,17,0),(1,18,0),(1,19,0),(1,20,0),(1,21,0),(1,22,0),
- (1,23,0),(1,24,0),(1,25,0),(1,26,0),(1,27,0),(1,28,0),(1,29,0),(1,30,0),(1,31,0),(1,32,0),(1,33,0),(1,34,0),(1,35,0),(1,36,0),(1,37,0),(1,38,0),(1,39,0),(1,40,0),(1,41,0),(1,42,0),(1,43,0),(1,44,0),(1,45,0),(1,47,0),(1,48,0),
+ (1,1,0),(1,2,0),(1,3,0),(1,4,0),(1,5,0),(1,6,0),(1,7,0),(1,8,0),(1,9,0),(1,10,0),(1,11,0),(1,12,0),(1,13,0),(1,14,0),(1,15,0),(1,16,0),(1,17,0),(1,18,0),(1,19,0),(1,20,0),(1,21,0),(1,22,0),(1,23,0),(1,24,0),(1,25,0),
+ (1,26,0),(1,27,0),(1,28,0),(1,29,0),(1,30,0),(1,31,0),(1,32,0),(1,33,0),(1,34,0),(1,35,0),(1,36,0),(1,37,0),(1,38,0),(1,39,0),(1,40,0),(1,41,0),(1,42,0),(1,43,0),(1,44,0),(1,45,0),(1,47,0),(1,48,0),(1,49,0),(1,50,0),(1,51,0),
  (3,3,0),(3,12,0),(3,13,0),(3,14,0),(3,15,0),(3,16,0),(3,17,0),(3,18,0),(3,19,0),(3,20,0),(3,21,0),(3,22,0),(3,23,0),(3,24,0),(3,25,0),(3,26,0),(3,27,0),(3,28,0),(3,29,0),(3,30,0),(3,32,0),(3,34,0),(3,43,0),(3,48,0),
 (2,12,0),(2,14,0),(2,17,0),(2,18,0),(2,19,0),(2,20,0),(2,21,0),(2,22,0),(2,23,0),(2,43,0);
 UNLOCK TABLES;
@@ -922,6 +923,7 @@ CREATE TABLE  `kinton`.`user` (
   `availableVirtualDatacenters` varchar(255),
   `active` int(1) unsigned NOT NULL default '0',
   `authType` varchar(20) NOT NULL,
+  `creationDate` timestamp NOT NULL,
   `version_c` int(11) default 0,
   PRIMARY KEY  (`idUser`),
   KEY `User_FK1` (`idRole`),
@@ -936,8 +938,8 @@ CREATE TABLE  `kinton`.`user` (
 
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
 LOCK TABLES `user` WRITE;
-INSERT INTO `kinton`.`user` VALUES  (1,1,1,'admin','Cloud','Administrator','Main administrator','','en_US','c69a39bd64ffb77ea7ee3369dce742f3',null,1, 'ABIQUO', 0),
- (2,2,1,'user','Standard','User','Standard user','','en_US','c69a39bd64ffb77ea7ee3369dce742f3',null,1, 'ABIQUO', 0);
+INSERT INTO `kinton`.`user` VALUES  (1,1,1,'admin','Cloud','Administrator','Main administrator','','en_US','c69a39bd64ffb77ea7ee3369dce742f3',null,1, 'ABIQUO', NOW(), 0),
+ (2,2,1,'user','Standard','User','Standard user','','en_US','c69a39bd64ffb77ea7ee3369dce742f3',null,1, 'ABIQUO',NOW(), 0);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 
@@ -1016,13 +1018,15 @@ CREATE TABLE  `kinton`.`virtualdatacenter` (
   `storageHard` bigint(20)  NOT NULL default 0,
   `vlanHard` bigint(20)  NOT NULL default 0,
   `publicIPHard` bigint(20)  NOT NULL default 0,
+  `default_vlan_network_id` int(11) unsigned default NULL,
   `version_c` integer NOT NULL DEFAULT 1,
   PRIMARY KEY  (`idVirtualDataCenter`),
   KEY `virtualDataCenter_FK1` (`idEnterprise`),
   KEY `virtualDataCenter_FK6` (`idDataCenter`),
   CONSTRAINT `virtualDataCenter_FK1` FOREIGN KEY (`idEnterprise`) REFERENCES `enterprise` (`idEnterprise`),
   CONSTRAINT `virtualDataCenter_FK4` FOREIGN KEY (`networktypeID`) REFERENCES `network` (`network_id`),
-  CONSTRAINT `virtualDataCenter_FK6` FOREIGN KEY (`idDataCenter`) REFERENCES `datacenter` (`idDataCenter`) ON DELETE RESTRICT
+  CONSTRAINT `virtualDataCenter_FK6` FOREIGN KEY (`idDataCenter`) REFERENCES `datacenter` (`idDataCenter`) ON DELETE RESTRICT,
+  CONSTRAINT `virtualDataCenter_FK7` FOREIGN KEY (`default_vlan_network_id`) REFERENCES `vlan_network` (`vlan_network_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 
 --
@@ -1064,7 +1068,7 @@ CREATE TABLE  `kinton`.`virtualimage` (
   `ovfid` varchar(255),
   `stateful` int(1) unsigned NOT NULL,
   `diskFileSize` BIGINT(20) UNSIGNED NOT NULL,
-  `cost_code` varchar(50) default NULL,
+  `cost_code` int(4),
   `version_c` integer NOT NULL DEFAULT 1,
   PRIMARY KEY  (`idImage`),
   KEY `fk_virtualimage_category` (`idCategory`),
@@ -1113,8 +1117,6 @@ CREATE TABLE  `kinton`.`virtualmachine` (
   `idDatastore` int(10) unsigned default NULL,
   `password` varchar(32) default NULL,
   `version_c` int(11) default 0,
-
-
   PRIMARY KEY  (`idVM`),
   KEY `VirtualMachine_FK1` (`idHypervisor`),
   KEY `virtualMachine_datastore_FK` (`idDatastore`),
@@ -1389,6 +1391,7 @@ INSERT INTO `kinton`.`system_properties` (`name`, `value`, `description`) VALUES
  ("client.wiki.user.dataCenterLimits","http://community.abiquo.com/display/ABI18/Manage+Enterprises#ManageEnterprises-RestrictingDatacenterAccess","Datacenter Limits wiki"),
  ("client.wiki.user.createUser","http://community.abiquo.com/display/ABI18/Manage+Users#ManageUsers-CreatingorEditingaUser","User creation wiki"),
  ("client.wiki.user.createRole","http://community.abiquo.com/display/ABI18/Manage+Roles+and+Privileges","Role creation wiki"),
+ ("client.wiki.pricing.createCurrency","","Currency creation wiki"),
  ("client.wiki.config.general","http://community.abiquo.com/display/ABI18/Configuration+view","Configuration wiki"),
  ("client.wiki.config.heartbeat","http://community.abiquo.com/display/ABI18/Configuration+view#Configurationview-Heartbeating","Heartbeat configuration wiki"),
  ("client.wiki.config.licence","http://community.abiquo.com/display/ABI18/Configuration+view#Configurationview-Licensemanagement","Licence configuration wiki"),
@@ -1575,9 +1578,9 @@ CREATE TABLE  `kinton`.`enterprise_limits_by_datacenter` (
   `vlanHard` bigint(20)  NOT NULL,
   `publicIPHard` bigint(20)  NOT NULL,
   `version_c` integer NOT NULL DEFAULT 1,
-  PRIMARY KEY (`idDatacenterLimit`)
-  -- CONSTRAINT `idDataCenter_FK` FOREIGN KEY (`idDataCenter`) REFERENCES `datacenter` (`idDataCenter`),
-  -- CONSTRAINT `idEnterprise_FK` FOREIGN KEY (`idEnterprise`) REFERENCES `enterprise` (`idEnterprise`)
+  `default_vlan_network_id` int(11) unsigned default NULL,
+  PRIMARY KEY (`idDatacenterLimit`),
+  CONSTRAINT `enterprise_PK1` FOREIGN KEY (`default_vlan_network_id`) REFERENCES `vlan_network` (`vlan_network_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 
 -- MySQL Administrator dump 1.4
@@ -1962,15 +1965,6 @@ CREATE  TABLE IF NOT EXISTS `kinton`.`enterprise_theme` (
 )ENGINE = InnoDB DEFAULT CHARSET=utf8;
 
 
--- The idRole values are taken from the above role table.
-/*!40000 ALTER TABLE `role_ldap` DISABLE KEYS */;
-LOCK TABLES `kinton`.`role_ldap` WRITE;
-insert into `kinton`.`role_ldap` values (1,1, 'LDAP_SYS_ADMIN', 0),
-(2,2, 'LDAP_USER', 0),
-(3,3, 'LDAP_ENTERPRISE_ADMIN', 0);
-UNLOCK TABLES;
-/*!40000 ALTER TABLE `role_ldap` ENABLE KEYS */;
-
 --
 -- STATISTICS MODULE TRIGGERS
 --
@@ -2251,7 +2245,7 @@ CREATE TRIGGER `kinton`.`delete_physicalmachine_update_stats` AFTER DELETE ON `k
           vStorageUsed=vStorageUsed-OLD.hdUsed
       WHERE idDataCenter = OLD.idDataCenter;
     END IF;
-    IF OLD.idState !=2 THEN
+    IF OLD.idState NOT IN (2, 6, 7) THEN
       UPDATE IGNORE cloud_usage_stats SET serversTotal=serversTotal-1 WHERE idDataCenter = OLD.idDataCenter;
       UPDATE IGNORE cloud_usage_stats
         SET vCpuTotal=vCpuTotal-(OLD.cpu*OLD.cpuRatio),
@@ -2275,8 +2269,8 @@ CREATE TRIGGER `kinton`.`update_physicalmachine_update_stats` AFTER UPDATE ON `k
   FOR EACH ROW BEGIN
     IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN
       IF OLD.idState != NEW.idState THEN
-        IF OLD.idState = 2 THEN
-          -- Machine not managed changes into managed
+        IF OLD.idState IN (2, 7) THEN
+          -- Machine not managed changes into managed; or disabled_by_ha to Managed
           UPDATE IGNORE cloud_usage_stats SET serversTotal=serversTotal+1 WHERE idDataCenter = NEW.idDataCenter;
           UPDATE IGNORE cloud_usage_stats
           SET vCpuTotal=vCpuTotal + (NEW.cpu*NEW.cpuRatio),
@@ -2284,8 +2278,8 @@ CREATE TRIGGER `kinton`.`update_physicalmachine_update_stats` AFTER UPDATE ON `k
             vStorageTotal=vStorageTotal + NEW.hd
           WHERE idDataCenter = NEW.idDataCenter;
         END IF;
-        IF NEW.idState = 2 THEN
-          -- Machine managed changes into not managed
+        IF NEW.idState IN (2,7) THEN
+          -- Machine managed changes into not managed or DisabledByHA
           UPDATE IGNORE cloud_usage_stats SET serversTotal=serversTotal-1 WHERE idDataCenter = NEW.idDataCenter;
           UPDATE IGNORE cloud_usage_stats
           SET vCpuTotal=vCpuTotal-(OLD.cpu*OLD.cpuRatio),
@@ -2312,7 +2306,8 @@ CREATE TRIGGER `kinton`.`update_physicalmachine_update_stats` AFTER UPDATE ON `k
         END IF;
       ELSE
       -- No State Changes
-        IF NEW.idState != 2 THEN
+        IF NEW.idState NOT IN (2, 6, 7) THEN
+	-- If Machine is in a not managed state, changes into resources are ignored, Should we add 'Disabled' state to this condition?
           UPDATE IGNORE cloud_usage_stats
             SET vCpuTotal=vCpuTotal+((NEW.cpu-OLD.cpu)*NEW.cpuRatio),
               vMemoryTotal=vMemoryTotal + (NEW.ram-OLD.ram),
@@ -2348,7 +2343,7 @@ CREATE TRIGGER `kinton`.`update_virtualmachine_update_stats` AFTER UPDATE ON `ki
         DECLARE idDataCenterObj INTEGER;
         DECLARE idVirtualAppObj INTEGER;
         DECLARE idVirtualDataCenterObj INTEGER;
-        DECLARE costCodeObj VARCHAR(50);
+        DECLARE costCodeObj int(4);
 	-- For debugging purposes only
         -- INSERT INTO debug_msg (msg) VALUES (CONCAT('UPDATE: ', OLD.idType, NEW.idType, OLD.state, NEW.state));	
         IF (@DISABLE_STATS_TRIGGERS IS NULL) THEN   
@@ -2471,7 +2466,7 @@ CREATE TRIGGER `kinton`.`update_virtualmachine_update_stats` AFTER UPDATE ON `ki
             END IF;         
         END IF;
         --
-        SELECT IF(vi.cost_code IS NULL, "", vi.cost_code) INTO costCodeObj
+        SELECT IF(vi.cost_code IS NULL, 0, vi.cost_code) INTO costCodeObj
         FROM virtualimage vi
         WHERE vi.idImage = NEW.idImage;
         -- Register Accounting Events
@@ -2757,6 +2752,7 @@ CREATE TRIGGER `kinton`.`virtualdatacenter_deleted` BEFORE DELETE ON `kinton`.`v
            WHERE ipm.dhcp_service_id=nc.dhcp_service_id
            AND vn.network_configuration_id = nc.network_configuration_id
            AND vn.network_id = dc.network_id
+	   AND vn.networktype = 'PUBLIC'
            AND ra.idManagement = ipm.idManagement
            AND ra.idVirtualDataCenter = OLD.idVirtualDataCenter;
 	   DECLARE CONTINUE HANDLER FOR NOT FOUND SET no_more_ipsfreed = 1;	  
@@ -2901,7 +2897,6 @@ CREATE TRIGGER `kinton`.`update_volume_management_update_stats` AFTER UPDATE ON 
 --
 -- ******************************************************************************************
 |
-DROP TRIGGER IF EXISTS `kinton`.`update_rasd_management_update_stats`;
 CREATE TRIGGER `kinton`.`update_rasd_management_update_stats` AFTER UPDATE ON `kinton`.`rasd_management`
     FOR EACH ROW BEGIN
         DECLARE state VARCHAR(50);
@@ -2956,7 +2951,6 @@ CREATE TRIGGER `kinton`.`update_rasd_management_update_stats` AFTER UPDATE ON `k
 				WHERE r.instanceID = OLD.idResource;
 				-- INSERT INTO debug_msg (msg) VALUES (CONCAT('Updating ExtStorage: ',idState,' - ', IFNULL(idDataCenterObj, 'idDataCenterObj es NULL'), IFNULL(idEnterpriseObj, 'idEnterpriseObj es NULL'), reservedSize));	
 				UPDATE IGNORE cloud_usage_stats SET storageUsed = storageUsed-reservedSize WHERE idDataCenter = idDataCenterObj;
-				UPDATE IGNORE vapp_enterprise_stats SET volAttached = volAttached-1 WHERE idVirtualApp = OLD.idVirtualApp;
 				UPDATE IGNORE enterprise_resources_stats 
 				    SET     extStorageUsed = extStorageUsed - reservedSize
 				    WHERE idEnterprise = idEnterpriseObj;
@@ -2966,7 +2960,7 @@ CREATE TRIGGER `kinton`.`update_rasd_management_update_stats` AFTER UPDATE ON `k
 				UPDATE IGNORE vdc_enterprise_stats 
 				    SET     volAttached = volAttached - 1, extStorageUsed = extStorageUsed - reservedSize
 				WHERE idVirtualDataCenter = OLD.idVirtualDatacenter;
-			        UPDATE IGNORE vapp_enterprise_stats SET volAttached = volAttached-1 WHERE idVirtualApp = OLD.idVirtualApp;
+				UPDATE IGNORE vapp_enterprise_stats SET volAttached = volAttached-1 WHERE idVirtualApp = OLD.idVirtualApp;
 			    END IF;                 
 			END IF;
 			-- Volume added to VDC
@@ -3000,6 +2994,7 @@ CREATE TRIGGER `kinton`.`update_rasd_management_update_stats` AFTER UPDATE ON `k
                 WHERE ipm.dhcp_service_id=nc.dhcp_service_id
                 AND vn.network_configuration_id = nc.network_configuration_id
                 AND vn.network_id = dc.network_id
+		AND vn.networktype = 'PUBLIC'
                 AND NEW.idManagement = ipm.idManagement;
                 -- Datacenter found ---> PublicIPUsed
                 IF idDataCenterObj IS NOT NULL THEN
@@ -3028,6 +3023,7 @@ CREATE TRIGGER `kinton`.`update_rasd_management_update_stats` AFTER UPDATE ON `k
                 WHERE ipm.dhcp_service_id=nc.dhcp_service_id
                 AND vn.network_configuration_id = nc.network_configuration_id
                 AND vn.network_id = dc.network_id
+		AND vn.networktype = 'PUBLIC'
                 AND NEW.idManagement = ipm.idManagement;
                 -- Datacenter found ---> Not PublicIPUsed
                 IF idDataCenterObj IS NOT NULL THEN
@@ -3056,6 +3052,7 @@ CREATE TRIGGER `kinton`.`update_rasd_management_update_stats` AFTER UPDATE ON `k
                 WHERE ipm.dhcp_service_id=nc.dhcp_service_id
                 AND vn.network_configuration_id = nc.network_configuration_id
                 AND vn.network_id = dc.network_id
+		AND vn.networktype = 'PUBLIC'
                 AND OLD.idManagement = ipm.idManagement;
                 -- Datacenter found ---> Not PublicIPReserved
                 IF idDataCenterObj IS NOT NULL THEN
@@ -3273,9 +3270,11 @@ CREATE TRIGGER `kinton`.`update_ip_pool_management_update_stats` AFTER UPDATE ON
             IF OLD.mac IS NULL AND NEW.mac IS NOT NULL THEN
                 -- Query for datacenter
                 SELECT vdc.idDataCenter, vdc.idVirtualDataCenter, vdc.idEnterprise  INTO idDataCenterObj, idVirtualDataCenterObj, idEnterpriseObj
-                FROM rasd_management rm, virtualdatacenter vdc
-                WHERE NEW.idManagement = rm.idManagement
-                AND vdc.idVirtualDataCenter = rm.idVirtualDataCenter;
+                FROM rasd_management rm, virtualdatacenter vdc, vlan_network vn
+                WHERE vdc.idVirtualDataCenter = rm.idVirtualDataCenter
+		AND NEW.vlan_network_id = vn.vlan_network_id
+		AND vn.networktype = 'PUBLIC'
+		AND NEW.idManagement = rm.idManagement;
                 -- New Public IP assignment for a VDC ---> Reserved
                 UPDATE IGNORE cloud_usage_stats SET publicIPsUsed = publicIPsUsed+1 WHERE idDataCenter = idDataCenterObj;
                 UPDATE IGNORE enterprise_resources_stats SET publicIPsReserved = publicIPsReserved+1 WHERE idEnterprise = idEnterpriseObj;
@@ -3536,7 +3535,7 @@ DROP PROCEDURE IF EXISTS `kinton`.`CalculateVdcEnterpriseStats`;
 --
 --
 --
- CREATE PROCEDURE `kinton`.CalculateCloudUsageStats()
+CREATE PROCEDURE `kinton`.CalculateCloudUsageStats()
    BEGIN
   DECLARE idDataCenterObj INTEGER;
   DECLARE serversTotal BIGINT UNSIGNED;
@@ -3620,6 +3619,7 @@ DROP PROCEDURE IF EXISTS `kinton`.`CalculateVdcEnterpriseStats`;
     WHERE ipm.dhcp_service_id=nc.dhcp_service_id
     AND vn.network_configuration_id = nc.network_configuration_id
     AND vn.network_id = dc.network_id
+    AND vn.networktype = 'PUBLIC'             
     AND ipm.mac IS NOT NULL
     AND dc.idDataCenter = idDataCenterObj;
     --
@@ -3628,6 +3628,7 @@ DROP PROCEDURE IF EXISTS `kinton`.`CalculateVdcEnterpriseStats`;
     WHERE ipm.dhcp_service_id=nc.dhcp_service_id
     AND vn.network_configuration_id = nc.network_configuration_id
     AND vn.network_id = dc.network_id
+    AND vn.networktype = 'PUBLIC'             
     AND rm.idManagement = ipm.idManagement
     AND ipm.mac IS NOT NULL
     AND rm.idVM IS NOT NULL
@@ -3797,7 +3798,8 @@ CREATE PROCEDURE `kinton`.CalculateEnterpriseResourcesStats()
     FROM ip_pool_management ipm, network_configuration nc, vlan_network vn, datacenter dc, rasd_management rm, virtualdatacenter vdc
     WHERE ipm.dhcp_service_id=nc.dhcp_service_id
     AND vn.network_configuration_id = nc.network_configuration_id
-    AND vn.network_id = dc.network_id                
+    AND vn.network_id = dc.network_id   
+    AND vn.networktype = 'PUBLIC'             
     AND rm.idManagement = ipm.idManagement
     AND vdc.idVirtualDataCenter = rm.idVirtualDataCenter
     AND vdc.idEnterprise = idEnterpriseObj;
@@ -3806,7 +3808,8 @@ CREATE PROCEDURE `kinton`.CalculateEnterpriseResourcesStats()
     FROM ip_pool_management ipm, network_configuration nc, vlan_network vn, datacenter dc, rasd_management rm, virtualdatacenter vdc
     WHERE ipm.dhcp_service_id=nc.dhcp_service_id
     AND vn.network_configuration_id = nc.network_configuration_id
-    AND vn.network_id = dc.network_id                
+    AND vn.network_id = dc.network_id            
+    AND vn.networktype = 'PUBLIC'    
     AND rm.idManagement = ipm.idManagement
     AND vdc.idVirtualDataCenter = rm.idVirtualDataCenter
     AND rm.idVM IS NOT NULL
@@ -3927,7 +3930,8 @@ CREATE PROCEDURE `kinton`.CalculateVdcEnterpriseStats()
     FROM ip_pool_management ipm, network_configuration nc, vlan_network vn, datacenter dc, rasd_management rm
     WHERE ipm.dhcp_service_id=nc.dhcp_service_id
     AND vn.network_configuration_id = nc.network_configuration_id
-    AND vn.network_id = dc.network_id                
+    AND vn.network_id = dc.network_id           
+    AND vn.networktype = 'PUBLIC'     
     AND rm.idManagement = ipm.idManagement
     AND rm.idVM IS NOT NULL
     AND rm.idVirtualDataCenter = idVirtualDataCenterObj;
@@ -3937,6 +3941,7 @@ CREATE PROCEDURE `kinton`.CalculateVdcEnterpriseStats()
     WHERE ipm.dhcp_service_id=nc.dhcp_service_id
     AND vn.network_configuration_id = nc.network_configuration_id
     AND vn.network_id = dc.network_id                
+    AND vn.networktype = 'PUBLIC'
     AND rm.idManagement = ipm.idManagement
     AND rm.idVirtualDataCenter = idVirtualDataCenterObj;
     --
@@ -4088,6 +4093,141 @@ CREATE TABLE `tasks` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+
+
+-- ******************************************************************************************
+-- PRICING RELATED TABLES
+-- ******************************************************************************************
+
+-- DROP THE TABLES RELATED TO PRICING --
+DROP TABLE IF EXISTS `kinton`.`pricing_template`;
+DROP TABLE IF EXISTS `kinton`.`costCode`;
+DROP TABLE IF EXISTS `kinton`.`pricingCostCode`;
+DROP TABLE IF EXISTS `kinton`.`pricingTier`;
+DROP TABLE IF EXISTS `kinton`.`currency`;
+DROP TABLE IF EXISTS `kinton`.`costCodeCurrency`;
+
+--
+-- Definition of table `kinton`.`currency`
+--
+
+CREATE TABLE `kinton`.`currency` (
+  `idCurrency` int(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `symbol` varchar(256) NOT NULL ,
+  `name` varchar(256) NOT NULL,
+  `digits` int(10)  NOT NULL default 2,
+  `version_c` int(11) default 0,
+  PRIMARY KEY (`idCurrency`)
+  ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+    
+
+--
+-- Dumping data for table `kinton`.`currency`
+--
+
+/*!40000 ALTER TABLE `currency` DISABLE KEYS */;
+LOCK TABLES `currency` WRITE;
+INSERT INTO `kinton`.`currency` values (1, "USD", "Dollar - $", 2,  0);
+INSERT INTO `kinton`.`currency` values (2, "EUR", CONCAT("Euro - " ,0xE282AC), 2,0);
+INSERT INTO `kinton`.`currency` values (3, "JPY", CONCAT("Yen - " , 0xc2a5), 0,  0);
+UNLOCK TABLES;
+/*!40000 ALTER TABLE `currency` ENABLE KEYS */;  
+  
+--
+-- Definition of table `kinton`.`costCode`
+--  
+
+CREATE TABLE `kinton`.`costCode` (
+  `idCostCode` int(10) NOT NULL AUTO_INCREMENT ,
+   `name` varchar(256) NOT NULL ,
+  `description` varchar(256) NOT NULL ,
+  `version_c` int(11) default 0,
+  PRIMARY KEY (`idCostCode`)
+  ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+
+--
+-- Definition of table `kinton`.`pricing`
+--
+  
+
+CREATE TABLE `kinton`.`pricingTemplate` (
+  `idPricingTemplate` int(10) UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `idCurrency` int(10) UNSIGNED NOT NULL ,
+  `name` varchar(256) NOT NULL ,
+  `chargingPeriod`  int(10) UNSIGNED NOT NULL ,
+  `minimumCharge` int(10) UNSIGNED NOT NULL ,
+  `showChangesBefore` boolean NOT NULL default 0,
+  `showMinimumCharge` boolean NOT NULL default 0,
+  `standingChargePeriod` DECIMAL(20,5) NOT NULL default 0,
+  `minimumChargePeriod` DECIMAL(20,5) NOT NULL default 0,
+  `vcpu` DECIMAL(20,5) NOT NULL default 0,
+  `memoryMB` DECIMAL(20,5) NOT NULL default 0,
+  `hdGB` DECIMAL(20,5) NOT NULL default 0,
+  `vlan` DECIMAL(20,5) NOT NULL default 0,
+  `publicIp` DECIMAL(20,5) NOT NULL default 0,
+  `defaultTemplate` boolean NOT NULL default 0,
+  `description` varchar(1000)  NOT NULL,
+  `last_update` timestamp NOT NULL,
+  `version_c` int(11) default 0,
+  PRIMARY KEY (`idPricingTemplate`) ,
+  KEY `Pricing_FK2_Currency` (`idCurrency`),
+  CONSTRAINT `Pricing_FK2_Currency` FOREIGN KEY (`idCurrency` ) REFERENCES `kinton`.`currency` (`idCurrency` ) ON DELETE NO ACTION
+  ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+  
+
+--
+-- Definition of table `kinton`.`pricingCostCode`
+--  
+  
+
+CREATE TABLE `kinton`.`pricingCostCode` (
+`idPricingCostCode` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `idPricingTemplate` int(10) UNSIGNED NOT NULL,
+  `idCostCode` int(10) UNSIGNED NOT NULL,
+  `price` DECIMAL(20,5) NOT NULL default 0,
+  `version_c` int(11) default 0,
+  PRIMARY KEY (`idPricingCostCode`) 
+  ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;  
+  
+ 
+--
+-- Table `kinton`.`costCodeCurrency`
+-- 
+
+DROP TABLE IF EXISTS `kinton`.`costCodeCurrency`;
+CREATE TABLE  `kinton`.`costCodeCurrency` (
+  `idCostCodeCurrency` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `idCostCode` int(10) unsigned,
+  `idCurrency` int(10) unsigned,
+  `price` DECIMAL(20,5) NOT NULL default 0,
+  `version_c` integer NOT NULL DEFAULT 1,
+  PRIMARY KEY (`idCostCodeCurrency`)
+  -- CONSTRAINT `idCostCode_FK` FOREIGN KEY (`idCostCode`) REFERENCES `costCode` (`idCostCode`),
+  -- CONSTRAINT `idCurrency_FK` FOREIGN KEY (`idCurrency`) REFERENCES `currency` (`idCurrency`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+ 
+ 
+--
+-- Definition of table `kinton`.`pricingTemplate_tier`
+--  
+
+
+CREATE TABLE `kinton`.`pricingTier` (
+  `idPricingTier` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `idPricingTemplate` int(10) UNSIGNED NOT NULL,
+  `idTier` int(10) UNSIGNED NOT NULL,
+  `price`  DECIMAL(20,5) NOT NULL default 0,
+  `version_c` int(11) default 0,
+  PRIMARY KEY (`idPricingTier`) 
+  ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;    
+  
+-- ADD THE COLUMN ID_PRICING TO ENTERPRISE --
+ALTER TABLE `kinton`.`enterprise` ADD COLUMN `idPricingTemplate` int(10) unsigned DEFAULT NULL;
+ALTER TABLE `kinton`.`enterprise` ADD CONSTRAINT `enterprise_pricing_FK` FOREIGN KEY (`idPricingTemplate`) REFERENCES `kinton`.`pricingTemplate` (`idPricingTemplate`);
+
+
+
 CALL `kinton`.`add_version_column_to_all`();
 USE kinton;
 --
@@ -4118,7 +4258,7 @@ CREATE TABLE `kinton`.`accounting_event_vm` (
   `startTime` TIMESTAMP NULL,
   `stopTime` TIMESTAMP NULL,
   `consolidated` BOOLEAN NOT NULL default 0,
-  `costCode` VARCHAR(50) DEFAULT NULL,
+  `costCode` int(4) DEFAULT NULL,
   `version_c` int(11) DEFAULT '0',
    PRIMARY KEY (`idVMAccountingEvent`)
 ) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
@@ -4190,7 +4330,7 @@ CREATE TABLE `kinton`.`accounting_event_detail` (
   `virtualDataCenter` VARCHAR(255)  NOT NULL,
   `virtualApp` VARCHAR(255) ,
   `virtualMachine` VARCHAR(255) ,
-  `costCode` VARCHAR(50) DEFAULT NULL,
+  `costCode` int(4) DEFAULT NULL,
   `version_c` int(11) DEFAULT '0',
   PRIMARY KEY (`idAccountingEvent`)
 ) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8;
@@ -4340,7 +4480,7 @@ CREATE PROCEDURE `kinton`.AccountingVMRegisterEvents(
     IN ramValue INT(7) unsigned,  
     IN cpuValue INT(10) unsigned,
     IN hdValue BIGINT(20) unsigned,
-    IN costCode VARCHAR(50))
+    IN costCode int(4))
 BEGIN
     IF idType = 1 AND (oldState != newState) AND (newState = "RUNNING") THEN
     -- Deploy Event Detected
