@@ -2,7 +2,7 @@
 
 Name:           abiquo-server
 Version:        1.8.5
-Release:        2%{?dist}%{?buildstamp}
+Release:        3%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
@@ -11,7 +11,7 @@ Source0:        server.war
 Source1:        abiquo.properties.server
 Source2:        abiquo-accounting.cron
 Source3:        kinton-schema.sql
-Source4:	      kinton-delta-1_8_0-to-1_8_5.sql
+Source4:	      kinton-delta-1_8_0-to-1_8_5_hf1.sql
 Source5:	server.xml
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server 
@@ -54,6 +54,9 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{abiquo_basedir}/tomcat/conf/Catalina/localhost/server.xml
 
 %changelog
+* Fri Oct 07 2011 Sergio Rubio <srubio@abiquo.com> - 1.8.5-3
+- updated to include 1.8.0 -> 1.8.5 HF1 delta
+
 * Fri Sep 30 2011 Sergio Rubio <srubio@abiquo.com> - 1.8.5-2
 - updated delta and schema
 
