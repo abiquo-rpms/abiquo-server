@@ -2,7 +2,7 @@
 
 Name:           abiquo-server
 Version:        1.8.5
-Release:        6%{?dist}%{?buildstamp}
+Release:        7%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
@@ -15,6 +15,7 @@ Source4:	      kinton-delta-1_8_5-to-1_8_5-HF1.sql
 Source5:	      server.xml
 Source6:	      kinton-delta-1_8_0-to-1_8_5.sql
 Source7:	      kinton-delta-1_8_5-HF2-to-1_8_5-HF3.sql
+Source8:	      kinton-delta-1_8_5-HF3-to-1_8_5-HF4.sql
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server 
 Requires:       /usr/sbin/sendmail /usr/bin/which
@@ -42,6 +43,7 @@ cp %{SOURCE3} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp %{SOURCE4} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp %{SOURCE6} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp %{SOURCE7} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
+cp %{SOURCE8} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp -r %{SOURCE1} $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 /usr/bin/unzip -d $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/webapps/server/ %{SOURCE0}
 cp %{SOURCE2} %{buildroot}/%{_sysconfdir}/cron.d/abiquo-accounting
@@ -58,6 +60,9 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{abiquo_basedir}/tomcat/conf/Catalina/localhost/server.xml
 
 %changelog
+* Fri Nov 18 2011 Sergio Rubio <rubiojr@frameos.org> - 1.8.5-7
+- HF4
+
 * Fri Nov 04 2011 Sergio Rubio <srubio@abiquo.com> - 1.8.5-6
 - include 1.8.5-HF3 db delta
 - update DB schema
