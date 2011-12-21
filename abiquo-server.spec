@@ -1,21 +1,17 @@
 %define abiquo_basedir /opt/abiquo
 
 Name:           abiquo-server
-Version:        1.8.5
-Release:        7%{?dist}%{?buildstamp}
+Version:        2.0
+Release:        1%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
 Summary:        Abiquo Server Enterprise Edition 
-Source0:        server.war
+Source0:	%{?abiquo_binaries_url}server.war
 Source1:        abiquo.properties.server
 Source2:        abiquo-accounting.cron
 Source3:        kinton-schema.sql
-Source4:	      kinton-delta-1_8_5-to-1_8_5-HF1.sql
-Source5:	      server.xml
-Source6:	      kinton-delta-1_8_0-to-1_8_5.sql
-Source7:	      kinton-delta-1_8_5-HF2-to-1_8_5-HF3.sql
-Source8:	      kinton-delta-1_8_5-HF3-to-1_8_5-HF4.sql
+Source4:	server.xml
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server 
 Requires:       /usr/sbin/sendmail /usr/bin/which
@@ -41,13 +37,10 @@ mkdir -p $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 mkdir -p %{buildroot}/%{_sysconfdir}/cron.d/
 cp %{SOURCE3} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp %{SOURCE4} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
-cp %{SOURCE6} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
-cp %{SOURCE7} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
-cp %{SOURCE8} $RPM_BUILD_ROOT%{_docdir}/%{name}/database/
 cp -r %{SOURCE1} $RPM_BUILD_ROOT/%{abiquo_basedir}/config/examples/
 /usr/bin/unzip -d $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/webapps/server/ %{SOURCE0}
 cp %{SOURCE2} %{buildroot}/%{_sysconfdir}/cron.d/abiquo-accounting
-cp %{SOURCE5} $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/conf/Catalina/localhost/
+cp %{SOURCE4} $RPM_BUILD_ROOT/%{abiquo_basedir}/tomcat/conf/Catalina/localhost/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -60,6 +53,9 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{abiquo_basedir}/tomcat/conf/Catalina/localhost/server.xml
 
 %changelog
+* Mon Dec 19 2011 Sergio Rubio <srubio@abiquo.com> - 2.0-1
+- bumped version to 2.0
+
 * Fri Nov 18 2011 Sergio Rubio <rubiojr@frameos.org> - 1.8.5-7
 - HF4
 
