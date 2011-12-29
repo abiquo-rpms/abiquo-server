@@ -8,3 +8,5 @@ abiquo.rabbitmq.password = guest
 abiquo.rabbitmq.host = 127.0.0.1
 abiquo.rabbitmq.port = 5672
 abiquo.auth.module = abiquo
+abiquo.server.api.location = http://10.60.20.11/api
+
