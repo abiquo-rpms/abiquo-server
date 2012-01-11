@@ -10,7 +10,7 @@ Summary:        Abiquo Server Enterprise Edition
 Source0:	%{?abiquo_binaries_url}server.war
 Source1:        abiquo.properties.server
 Source2:        abiquo-accounting.cron
-Source3:        kinton-schema.sql
+Source3:	%{?abiquo_binaries_url}kinton-schema.sql
 Source4:	server.xml
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Requires:       abiquo-core abiquo-client-premium mysql-server nfs-utils sos wget ruby ntp libvirt-client rabbitmq-server 
