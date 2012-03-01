@@ -2,7 +2,7 @@
 
 Name:           abiquo-server
 Version:        1.8.5
-Release:        8%{?dist}%{?buildstamp}
+Release:        9%{?dist}%{?buildstamp}
 Url:            http://www.abiquo.com/
 License:        Multiple
 Group:          Development/Tools
@@ -60,6 +60,9 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{abiquo_basedir}/tomcat/conf/Catalina/localhost/server.xml
 
 %changelog
+* Thu Mar 01 2012 Sergio Rubio <srubio@abiquo.com> - 1.8.5-9
+- 1.8.5-HF7 update
+
 * Wed Dec 21 2011 Sergio Rubio <srubio@abiquo.com> - 1.8.5-8
 - 1.8.5 HF6 update
 
